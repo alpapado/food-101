@@ -1,5 +1,6 @@
-function [ features, validPoints, labValues ] = extractSuperpixelFeatures( image, imageSuperpixels, superpixelIndex)
-%extractSuperpixelFeatures Extracts SURFs and Lab values from superpixel
+function [ features, validPoints, labValues ] = extractSuperpixelFeatures2( image, imageSuperpixels, superpixelIndex)
+%extractSuperpixelFeatures2 Extracts SURFs and Lab values from superpixel
+%(SLOW)
 
 % Auxilliary variables
 [width, height, channels] = size(image);
@@ -20,30 +21,31 @@ gridX = 1:gridStep:width;
 gridY = 1:gridStep:height;
 [x ,y] = meshgrid(gridX, gridY);
 gridLocations = [x(:), y(:)];
+gridPoints = SURFPoints(gridLocations);
 
-% Keep grid points that fall within superpixel area
-numGridPoints = size(gridLocations, 1);
-indexes = 1:numGridPoints;
+% Extract all SURFs for the image
+[allSurfs, allValidPoints] = extractFeatures(gray, gridPoints);
+
+% Keep those SURFs that fall within the region of the superpixel
+numPoints = size(allValidPoints, 1);
 superpixelLocation = (imageSuperpixels == superpixelIndex);
+indexes = 1:numPoints;
+allLocations = allValidPoints.Location;
 
-for i = 1:numGridPoints
-    if superpixelLocation(gridLocations(i,1), gridLocations(i,2)) ~= 1
-        % Dont sample at this point
+for i = 1:numPoints
+    if superpixelLocation(allLocations(i,1), allLocations(i,2)) ~= 1
+        % Dont keep the feature
         indexes(i) = 0;
     end
 end
 
 indexes(indexes == 0) = [];
-spGridLocations = gridLocations(indexes, :);
-gridPoints = SURFPoints(spGridLocations);
-
-
-% Extract all SURFs for the image
-[surfs, validPoints] = extractFeatures(gray, gridPoints);
+surfs = allSurfs(indexes, :);
+validPoints = allValidPoints(indexes);
 
 % Get lab values
 validPointsLocation = validPoints.Location;
-numValidPoints = size(validPoints, 1);
+numValidPoints = size(validPointsLocation, 1);
 labValues = zeros(numValidPoints, 3);
 
 for i = 1:numValidPoints

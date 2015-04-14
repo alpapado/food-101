@@ -2,13 +2,6 @@ function [ image, class, imageSuperpixels, superpixelIndex ] = sampleRandomSuper
 %sampleRandomSuperpixel Returns a random superpixel from a random image
 %form a random class
 
-% Generate random seed
-[~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
-seed = str2double(seed);
-
-% Seed the generator
-rng(seed);
-
 % Generate random class index
 classIndex = randi([1 size(classes, 1)], 1);
 class = num2str(cell2mat(classes(classIndex)));
