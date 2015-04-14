@@ -1,7 +1,7 @@
-function [ segments ] = segment_image( image )
-%segment_img Performs segmentation on an image using the SLIC algorithm
+function [ segments ] = segmentImage( image )
+%segmentImage Performs segmentation on an image using the SLIC algorithm
 %   image: The image to be segmented
-%   segmetns: The produced segments by the SLIC algorithm
+%   segments: The produced segments by the SLIC algorithm
 
 % Calculate region size
 regionSize = max(size(image)) * 0.2;
