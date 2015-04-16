@@ -7,11 +7,11 @@ classes = textscan(fid, '%s', 'Delimiter', '\n');
 classes = classes{1};
 
 base = 'food-101/';
-images_path = 'food-101/images/';
-superpixels_path = [base 'superpixels/'];
+superpixelsPath = [base 'superpixels/'];
 
 % Segment the dataset and save the results
-% segmentDataset(images_path, classes, superpixels_path);
+% imagesPath = 'food-101/images/';
+% segmentDataset(imagesPath, classes, superpixelsPath);
 
 % Generate random seed
 [~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
@@ -24,5 +24,5 @@ clear fid
 clear base
 clear seed
 
-[image, class, superpixels, index] = sampleRandomSuperpixel(superpixels_path, classes);
-[features, points, labValues] = extractSuperpixelFeatures(image, superpixels, index);
+nData = 10000;
+s = sampleTrainingData(nData, superpixelsPath, classes);

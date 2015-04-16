@@ -4,10 +4,10 @@ function [ segments ] = segmentImage( image )
 %   segments: The produced segments by the SLIC algorithm
 
 % Calculate region size
-regionSize = max(size(image)) * 0.2;
+regionSize = round(max(size(image)) * 0.3);
 
 % Calculate regularizer
-regularizer = 0.5;
+regularizer = 1;
 
 % Convert input image to L*a*b
 imlab = vl_xyz2lab(vl_rgb2xyz(image));

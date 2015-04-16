@@ -31,7 +31,7 @@ for c = 1:numClasses
             segments = segmentImage(img);
             save(saveLocation, 'segments');
         catch ME
-            fprintf('%s', ME.identifier);       
+            fprintf('%s \n', ME.identifier);       
         end
 
     end
