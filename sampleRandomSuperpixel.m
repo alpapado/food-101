@@ -1,4 +1,4 @@
-function [ image, class, imageSuperpixels, superpixelIndex ] = sampleRandomSuperpixel( superpixelFolder, classes )
+function [ image, class, imageSuperpixels, superpixelIndex, classIndex ] = sampleRandomSuperpixel( superpixelFolder, classes )
 %sampleRandomSuperpixel Returns a random superpixel from a random image
 %form a random class
 

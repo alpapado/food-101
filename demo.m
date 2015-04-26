@@ -24,5 +24,10 @@ clear fid
 clear base
 clear seed
 
-nData = 10000;
-s = sampleTrainingData(nData, superpixelsPath, classes);
+% nData = 10;
+% s = sampleTrainingData(nData, superpixelsPath, classes);
+% load('s1k.mat');
+% rTree = tree(s);
+% rTree = growRandomTree(s, rTree, 1);
+nTrees = 10;
+forest = growRandomForest(nTrees);

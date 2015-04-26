@@ -12,27 +12,64 @@ numSVMs = 100;
 numData = size(data, 2);
 numTrainingData = floor(0.2 * numData);
 features = reshape( extractfield(data, 'features'), [8576, numData] );
+classes = extractfield(data, 'classIndex');
 
 % Set training set
 X = features(:, 1:numTrainingData);
 
-infoGain = zeros(numSVMs, 1);
+infoGain = -realmax;
+bestSplitLeft = zeros(numData, 1);
+bestSplitRight = zeros(numData, 1);
 
 for i = 1:numSVMs
     % Generate random binary partition of class labels
     y = randi([0 1], numTrainingData, 1);
-
+    
+    % Keep generating random binary partion until at least 1 sample of 
+    % each class (0 or 1) is generated
+    while size(unique(y), 1) < 2
+        y = randi([0 1], numTrainingData, 1);
+    end
+    
     % Train the SVM
-    svmStruct = svmtrain(X', y);
+    try
+      svmStruct = svmtrain(X', y);
+    catch me
+       size(data)
+       y 
+    end
 
     % Classify the rest of the data
     testSet = features(:, numTrainingData+1:end);
     svmResult = svmclassify(svmStruct, testSet' );
     split = [y; svmResult];
 
-    left = find(split == 0);
-    right = find(split == 1);
+    % Calculate information gain
+    leftIndexes = split == 0;
+    rightIndexes = split == 1;
+    
+%     try
+    leftClasses = extractfield(data(leftIndexes), 'classIndex');
+    rightClasses = extractfield(data(rightIndexes), 'classIndex');
+%     catch
+%         size(data)
+%         rightIndexes
+%         leftIndexes
+%     end
+    
+    temp = informationGain(classes, leftClasses, rightClasses);
+    
+    if temp > infoGain
+        infoGain = temp;
+        bestSplitLeft = leftIndexes;
+        bestSplitRight = rightIndexes;
+    end
+    
 end
+
+% Choose the split with the largest information gain
+left = data(bestSplitLeft);
+right = data(bestSplitRight);
 
 end
 
