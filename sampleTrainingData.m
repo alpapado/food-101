@@ -1,4 +1,4 @@
-function [ trainingStruct ] = sampleTrainingData(nData )
+function [ trainingStruct ] = sampleTrainingData(nData)
 %sampleTrainingData Samples n random superpixels, extracts features on them
 %and returns them in a struct.
 %   Detailed explanation goes here
@@ -12,7 +12,8 @@ superpixelsPath = [base 'superpixels/'];
 field1 = 'features'; value1 = zeros(8576, 1);
 field2 = 'classLabel'; value2 = '';
 field3 = 'classIndex'; value3 = 0;
-trainingStruct = struct(field1, value1, field2, value2, field3, value3);
+field4 = 'id'; value4 = 0;
+trainingStruct = struct(field1, value1, field2, value2, field3, value3, field4, value4);
 i = 1;
 
 while i <= nData 

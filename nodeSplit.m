@@ -1,4 +1,4 @@
-function [ left, right ] = nodeSplit( data )
+function [ left, right, svm ] = nodeSplit( data )
 %nodeSplit Splits the input data in two parts
 %   Generate n binary SVMs as decision functions on random binary partitions
 %   of the class labels in data. Hold the one that maximizes the
@@ -47,15 +47,8 @@ for i = 1:numSVMs
     % Calculate information gain
     leftIndexes = split == 0;
     rightIndexes = split == 1;
-    
-%     try
     leftClasses = extractfield(data(leftIndexes), 'classIndex');
     rightClasses = extractfield(data(rightIndexes), 'classIndex');
-%     catch
-%         size(data)
-%         rightIndexes
-%         leftIndexes
-%     end
     
     temp = informationGain(classes, leftClasses, rightClasses);
     
@@ -63,6 +56,7 @@ for i = 1:numSVMs
         infoGain = temp;
         bestSplitLeft = leftIndexes;
         bestSplitRight = rightIndexes;
+        svm = svmStruct;
     end
     
 end

@@ -1,4 +1,4 @@
-function [segments ] = segmentDataset( datasetPath, classes, targetPath )
+function [segments] = segmentDataset( datasetPath, classes, targetPath )
 %segmentDataset Performs segmentation on the food-101 dataset and saves
 %the result
 %   datasetPath: Path to location of dataset
