@@ -5,7 +5,7 @@ function [ classConf ] = classConfidence( leaves, cvSet, numClasses )
 
 numLeaves = size(leaves, 2);
 numSamples = size(cvSet, 2);
-classConf = zeros(numSamples, numClasses);
+classConf = zeros(numClasses, numSamples);
 
 classDist = classDistribution(leaves, numClasses);
 delta = computeDeltas(leaves, cvSet);
