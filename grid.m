@@ -1,16 +1,17 @@
 clc
 clear
 
-untar('food-101.tar.gz');
+run('vlfeat/toolbox/vl_setup.m')
+base = 'data/';
 
 % Read class labels from file
-fid = fopen('food-101/meta/classes.txt');
+classFile = [base 'meta/classes.txt'];
+fid = fopen(classFile);
 classes = textscan(fid, '%s', 'Delimiter', '\n');
 classes = classes{1};
 
-base = 'data/';
 superpixelsPath = [base 'superpixels/'];
-datasetPath = [base 'images'];
+datasetPath = [base 'images/'];
 
-encoded = encodeDataset(datasetPath, superpixelsPath);
+encoded = encodeDataset(datasetPath, superpixelsPath, classes);
 save('data_encoded.mat', 'encoded');

@@ -1,4 +1,4 @@
-function [ encoded ] = encodeDataset( datasetPath, superpixelsPath )
+function [ encoded ] = encodeDataset( datasetPath, superpixelsPath, classes )
 %encodeDataset Calculates surfs and lab values and fisher encodes them, for
 %the entire dataset
 field1 = 'features'; value1 = zeros(8576, 1);
@@ -8,9 +8,6 @@ field4 = 'image'; value4 = '';
 encoded = struct(field1, value1, field2, value2, field3, value3, field4, value4);
 
 % Read class labels from file
-fid = fopen('food-101/meta/classes.txt');
-classes = textscan(fid, '%s', 'Delimiter', '\n');
-classes = classes{1};
 numClasses = size(classes, 1);
 j = 1;
 
@@ -32,11 +29,17 @@ for c = 1:numClasses
         
         % For every superpixels in the image call extractSuperpixelFeatures
         for s = 1:max(max(segments))
-            features = extractSuperpixelFeatures( image, segments, superpixelIndex);
-            encoded(j).features = features;
-            encoded(j).classLabel = classLabel;
-            encoded(j).classIndex = classIndex;
-            encoded(j).image = imageName;
+            try
+                features = extractSuperpixelFeatures( image, segments, s);
+                encoded(j).features = features;
+                encoded(j).classLabel = classLabel;
+                encoded(j).classIndex = classIndex;
+                encoded(j).image = imageName;
+                j = j + 1;
+            catch ME
+                fprintf('%s \n', ME.identifier); 
+            end
+            
         end
 
     end
