@@ -8,7 +8,7 @@ fid = fopen('food-101/meta/classes.txt');
 classes = textscan(fid, '%s', 'Delimiter', '\n');
 classes = classes{1};
 
-base = 'food-101/';
+base = 'data/';
 superpixelsPath = [base 'superpixels/'];
 datasetPath = [base 'images'];
 
