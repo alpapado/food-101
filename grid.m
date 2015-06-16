@@ -1,7 +1,7 @@
 clc
 clear
 
-run('vlfeat/toolbox/vl_setup.m')
+% run('vlfeat/toolbox/vl_setup.m');
 base = 'data/';
 
 % Read class labels from file
