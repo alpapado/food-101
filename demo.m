@@ -2,7 +2,7 @@ clc
 clear
 
 % Read class labels from file
-fid = fopen('food-101/meta/classes.txt');
+fid = fopen('data/meta/classes.txt');
 classes = textscan(fid, '%s', 'Delimiter', '\n');
 classes = classes{1};
 

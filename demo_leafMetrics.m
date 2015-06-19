@@ -1,4 +1,6 @@
-load('tree.mat');
+% load('tree.mat');
+% load('s1k.mat');
+% rTree = treeClassify(rTree,s);
 
 base = 'data/';
 fid = fopen([base 'meta/classes.txt']);
@@ -15,5 +17,5 @@ for i = 1:numLeaves
     leaves(i) = rTree.get(leafIndx(i));
 end
 
-load('s1k.mat');
-distinct = distinctiveness(leaves, s, size(classes,1));
+[distinct, classConf, classDist, delta] = distinctiveness(leaves, s, size(classes,1));
+[ models ] = mineComponents( rTree, s, 5, length(classes) );
