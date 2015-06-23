@@ -1,9 +1,9 @@
 % clear all
 % Load tree/forest
-% load('tree.mat');
+load('tree.mat');
 
 % Load validation set
-% load('s1k.mat');
+load('s1k.mat');
 
 % rTree = treeClassify(rTree,s);
 base = 'data/';
