@@ -1,26 +1,26 @@
 function [ encoded ] = encodeDataset()
 %encodeDataset Calculates surfs and lab values and fisher encodes them, for
 %the entire dataset
-run('vlfeat/toolbox/vl_setup.m');
-
-base = 'data/';
-classFile = [base 'meta/classes.txt'];
-fid = fopen(classFile);
-classes = textscan(fid, '%s', 'Delimiter', '\n');
-classes = classes{1};
-superpixelsPath = [base 'superpixels/'];
-datasetPath = [base 'images/'];
-
-field1 = 'features'; value1 = zeros(8576, 1);
-field2 = 'classLabel'; value2 = '';
-field3 = 'classIndex'; value3 = 0;
-field4 = 'image'; value4 = '';
-encoded = struct(field1, value1, field2, value2, field3, value3, field4, value4);
-
+%run('vlfeat/toolbox/vl_setup.m');
+%
+%base = 'data/';
+%classFile = [base 'meta/classes.txt'];
+%fid = fopen(classFile);
+%classes = textscan(fid, '%s', 'Delimiter', '\n');
+%classes = classes{1};
+%superpixelsPath = [base 'superpixels/'];
+%datasetPath = [base 'images/'];
+%
+%field1 = 'features'; value1 = zeros(8576, 1);
+%field2 = 'classLabel'; value2 = '';
+%field3 = 'classIndex'; value3 = 0;
+%field4 = 'image'; value4 = '';
+%encoded = struct(field1, value1, field2, value2, field3, value3, field4, value4);
+%
 % Read class labels from file
 numClasses = size(classes, 1);
 
-for c = 1:numClasses
+parfor c = 1:numClasses
     classLabel = num2str(cell2mat(classes(c)));
     fprintf('Current class = %s \n', classLabel);
     imagesPath = [datasetPath classLabel '/'];
