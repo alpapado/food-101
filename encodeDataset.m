@@ -20,18 +20,19 @@ encoded = struct(field1, value1, field2, value2, field3, value3, field4, value4)
 % Read class labels from file
 numClasses = size(classes, 1);
 
-parfor c = 1:numClasses
+for c = 1:numClasses
     classLabel = num2str(cell2mat(classes(c)));
     fprintf('Current class = %s \n', classLabel);
     imagesPath = [datasetPath classLabel '/'];
     classIndex = c;
     
+    spPath = [superpixelsPath classLabel '/']; 
     allSuprepixels = dir([superpixelsPath classLabel '/*.mat']);
     
     for i = 1:size(allSuprepixels, 1)
         % Load previously computed superpixels into variable segments
-        allSuprepixels(i).name
-        sp = load(allSuprepixels(i).name);
+        fprintf('Current image = %s\n', [spPath allSuprepixels(i).name] );
+        sp = load([spPath allSuprepixels(i).name]);
         
         % Also load image to which the superpixels correspond
         imageName = [imagesPath allSuprepixels(i).name(1:end-4) '.jpg'];
@@ -53,7 +54,7 @@ parfor c = 1:numClasses
                 temp.image = imageName;
                 encoded = [encoded, temp];
             catch ME
-                fprintf('%s \n', ME.identifier); 
+                msgString = getReport(ME)
             end
             
         end
