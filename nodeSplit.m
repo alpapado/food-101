@@ -32,12 +32,13 @@ for i = 1:numSVMs
     end
     
     % Train the SVM
-    try
+%     try
       svmStruct = svmtrain(X', y);
-    catch me
-       size(data)
-       y 
-    end
+%     catch me
+%         fprintf('%s\n',me.identifier);
+%        size(data);
+%        y ;
+%     end
 
     % Classify the rest of the data
     testSet = features(:, numTrainingData+1:end);
@@ -64,6 +65,7 @@ end
 % Choose the split with the largest information gain
 left = data(bestSplitLeft);
 right = data(bestSplitRight);
+
 
 end
 

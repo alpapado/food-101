@@ -10,7 +10,7 @@ for l = 1:numLeaves
         continue
     end
     
-    sampleIds = leaves(l).cvData.id;
+    sampleIds = extractfield(leaves(l).cvData, 'id');
     
     for s = 1:numSamples
         if any(sampleIds == s)
