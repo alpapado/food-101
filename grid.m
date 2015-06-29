@@ -1,7 +1,7 @@
 clc
 clear
 
-run('vlfeat/toolbox/vl_setup.m');
+% run('vlfeat/toolbox/vl_setup.m');
 base = 'data/';
 
 % Read class labels from file
@@ -13,5 +13,7 @@ classes = classes{1};
 superpixelsPath = [base 'superpixels/'];
 datasetPath = [base 'images/'];
 
+c = parcluster;
+parpool(c);
 encoded = encodeDataset(datasetPath, superpixelsPath, classes);
 save('data_encoded.mat', 'encoded');

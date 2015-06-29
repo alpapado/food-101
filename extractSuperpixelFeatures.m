@@ -1,6 +1,6 @@
 function [ features] = extractSuperpixelFeatures( image, imageSuperpixels, superpixelIndex)
 %extractSuperpixelFeatures Extracts SURFs and Lab values from superpixel
-tic
+% tic
 % Auxilliary variables
 [width, height, channels] = size(image);
 
@@ -57,6 +57,6 @@ labEncoding = ivfEncode(labValues, modes);
 
 % Concatenate the two vectors
 features = [surfsEncoding; labEncoding];
-toc
+% toc
 end
 

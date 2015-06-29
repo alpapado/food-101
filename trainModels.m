@@ -16,13 +16,32 @@ for i = 1:numModels
     X = reshape(extractfield(leaf.cvData, 'features'), [8576, numData]);
     y = double(leafClasses == class);
 
-    SVMModel = fitcsvm(X',y,'KernelScale','auto', 'Cost', cost);
-     % The full svm struct is too large to save, considering that about 2000 such structures
-    % will be saved. So, it must be shrunk
-    compactModel = compact(SVMModel);
+    % Train model
+    SVMModel = fitcsvm(X',y,'KernelScale','auto', 'Cost', cost, 'KernelFunction', 'linear');
+    
+     % The full svm model is too large to save, considering that about 2000
+     % such models will be saved. So, it must be shrunk
+    compactModel = compact(SVMModel); % Discard training data
+    
+    try
+        % **** R2015 only compatible ****
+        reducedModel = discardSupportVectors(compactModel); % Discard support vectors
+        % **** --------------------- ****
+        models(i).svm = reducedModel;
+%         p = predict(reducedModel, X');
+    catch
+        fprintf('exception \n');
+        models(i).svm = compactModel;
+%         p = predict(compactModel, X');
+    end
+       
+%     pos = sum(y==1);
+%     neg = sum(y==0);
+%     acc = sum(p==y') ./ length(y);
+    eval = evaluateModel(models(i).svm, X', y);
+    fprintf('Examples = %d Accuracy = %s\n', length(y), num2str(eval(1)));
     
     % TODO Hard negative mining
-    models(i).svm = compactModel;
 end
 
 end
