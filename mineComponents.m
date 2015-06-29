@@ -33,7 +33,7 @@ for y = 1:numClasses
     % Select top N (numComponents) leaves
     topLeaves = prunedLeaves(1:numComponents);
     
-    % TODO Train models for each top leaf
+    % Train models for each top leaf
     models(y,:) = trainModels(topLeaves, y);
 end
 
