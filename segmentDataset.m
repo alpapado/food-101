@@ -1,4 +1,4 @@
-function [segments] = segmentDataset( datasetPath, classes, targetPath )
+function segmentDataset( datasetPath, classes, targetPath )
 %segmentDataset Performs segmentation on the food-101 dataset and saves
 %the result
 %   datasetPath: Path to location of dataset
@@ -15,21 +15,20 @@ for c = 1:numClasses
     pathToSuperpixels = [targetPath currentClass];
     mkdir(pathToSuperpixels);
     
-    for i = 1:size(classImages, 1)
+    parfor i = 1:size(classImages, 1)
+        fprintf('Segmenting %s %d/%d\n', currentClass, i, size(classImages,1));
         saveLocation = [pathToSuperpixels '/' classImages(i).name(1:end-4)]; % Remove .jpg extension from name
         
         if exist([saveLocation '.mat'], 'file') == 2
-%             fprintf('Image has already been segmented... skipping... \n');
             continue
         end
         
         pathToImage = [pathToImageFolder '/' classImages(i).name];
-        fprintf('Segmenting image: %s \n', pathToImage);
         img = imread(pathToImage, 'jpg');
         
         try
             segments = segmentImage(img);
-            save(saveLocation, 'segments');
+            parSave(saveLocation, segments);
         catch ME
             fprintf('%s \n', ME.identifier);       
         end

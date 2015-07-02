@@ -7,7 +7,7 @@ function [ segments ] = segmentImage( image )
 regionSize = round(max(size(image)) * 0.3);
 
 % Calculate regularizer
-regularizer = 1;
+regularizer = 0.01;
 
 % Convert input image to L*a*b
 imlab = vl_xyz2lab(vl_rgb2xyz(image));

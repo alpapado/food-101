@@ -13,8 +13,8 @@ classes = classes{1};
 superpixelsPath = [base 'superpixels/'];
 datasetPath = [base 'images/'];
 
-c = parcluster;
-matlabpool(c);
+% c = parcluster;
+% matlabpool(c);
 %parpool(c);
-encoded = encodeDataset(datasetPath, superpixelsPath, classes);
+[encoded, j] = encodeDataset(datasetPath, superpixelsPath, classes);
 save('data_encoded.mat', 'encoded');
