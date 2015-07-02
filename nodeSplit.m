@@ -5,17 +5,18 @@ function [ left, right, svm ] = nodeSplit( data )
 %   information gain criterion.
 % data: Struct containing fields: features, class,
 
-% Number of SVM models to train
+% Number of SVM models to be trained as decision function
 numSVMs = 100;
 
 % Set SVM parameters
 numData = size(data, 2);
-numTrainingData = floor(0.2 * numData);
+numTrainingData = min(20*10^3, floor(0.6 * numData)); % decision function training data
 features = reshape( extractfield(data, 'features'), [8576, numData] );
 classes = extractfield(data, 'classIndex');
 
 % Set training set
 X = features(:, 1:numTrainingData);
+testSet = features(:, numTrainingData+1:end);
 
 infoGain = -realmax;
 bestSplitLeft = zeros(numData, 1);
@@ -31,18 +32,35 @@ for i = 1:numSVMs
         y = randi([0 1], numTrainingData, 1);
     end
     
-    % Train the SVM
-%     try
-      svmStruct = svmtrain(X', y);
-%     catch me
-%         fprintf('%s\n',me.identifier);
-%        size(data);
-%        y ;
-%     end
+    % Train the SVM 1
+    svmModel = fitcsvm(X', y, 'KernelFunction', 'linear');
+    compactModel = compact(svmModel); % Discard training data
 
+   matlab = ver;
+   if strcmp(matlab(1).Release, 'R2015a')
+       % **** R2015 only compatible ****
+       model = discardSupportVectors(compactModel); % Discard support vectors
+       % **** --------------------- ****
+   else
+       model = compactModel;
+   end
+%    try
+%        % **** R2015 only compatible ****
+%        model = discardSupportVectors(compactModel); % Discard support vectors
+%        % **** --------------------- ****
+%    catch      
+%        fprintf('exception \n');
+%        model = compactModel;
+%    end
+    
     % Classify the rest of the data
-    testSet = features(:, numTrainingData+1:end);
-    svmResult = svmclassify(svmStruct, testSet' );
+    svmResult = predict(model, testSet');
+    
+%     tic
+%     svmModel2 = svmtrain(X', y);
+%     svmResult2 = svmclassify(svmModel2, testSet' );
+%     toc
+    
     split = [y; svmResult];
 
     % Calculate information gain
@@ -57,7 +75,7 @@ for i = 1:numSVMs
         infoGain = temp;
         bestSplitLeft = leftIndexes;
         bestSplitRight = rightIndexes;
-        svm = svmStruct;
+        svm = model;
     end
     
 end

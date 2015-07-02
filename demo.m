@@ -9,10 +9,6 @@ classes = classes{1};
 base = 'food-101/';
 superpixelsPath = [base 'superpixels/'];
 
-% Segment the dataset and save the results
-% imagesPath = 'food-101/images/';
-% segmentDataset(imagesPath, classes, superpixelsPath);
-
 % Generate random seed
 [~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
 seed = str2double(seed);

@@ -1,4 +1,4 @@
-function [ encoded ] = encodeDataset(datasetPath, superpixelsPath, classes)
+function [ encoded, j ] = encodeDataset(datasetPath, superpixelsPath, classes)
 %encodeDataset Calculates surfs and lab values and fisher encodes them, for
 %the entire dataset
 
@@ -10,8 +10,8 @@ encoded = struct(field1, value1, field2, value2, field3, value3, field4, value4)
 
 % Read class labels from file
 numClasses = size(classes, 1);
-
-parfor c = 1:numClasses
+j = 0;
+for c = 1:numClasses
     classLabel = num2str(cell2mat(classes(c)));
     fprintf('Current class = %s \n', classLabel);
     imagesPath = [datasetPath classLabel '/'];
@@ -20,9 +20,9 @@ parfor c = 1:numClasses
     spPath = [superpixelsPath classLabel '/']; 
     allSuprepixels = dir([superpixelsPath classLabel '/*.mat']);
     
-    for i = 1:size(allSuprepixels, 1)
+    parfor i = 1:size(allSuprepixels, 1)
         % Load previously computed superpixels into variable segments
-        fprintf('Current image = %s\n', [spPath allSuprepixels(i).name] );
+%         fprintf('Current image = %s\n', [spPath allSuprepixels(i).name] );
         sp = load([spPath allSuprepixels(i).name]);
         
         % Also load image to which the superpixels correspond
@@ -43,11 +43,11 @@ parfor c = 1:numClasses
                 temp.classLabel = classLabel;
                 temp.classIndex = classIndex;
                 temp.image = imageName;
-                encoded = [encoded, temp];
+                encoded(j) = temp;
             catch ME
                 msgString = getReport(ME)
             end
-            
+            j = j +1;
         end
 
     end
