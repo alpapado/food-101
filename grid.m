@@ -1,5 +1,5 @@
-clc
-clear
+% clc
+% clear
 
 % run('vlfeat/toolbox/vl_setup.m');
 base = 'data/';
@@ -16,5 +16,5 @@ datasetPath = [base 'images/'];
 % c = parcluster;
 % matlabpool(c);
 %parpool(c);
-[encoded, j] = encodeDataset(datasetPath, superpixelsPath, classes);
-save('data_encoded.mat', 'encoded');
+[encoded] = encodeDataset(datasetPath, superpixelsPath, classes);
+% save('data_encoded.mat', 'encoded');
