@@ -11,22 +11,22 @@ encoded = [];
 % Read class labels from file
 numClasses = size(classes, 1);
 
-for c = 1:numClasses
+parfor c = 1:numClasses
     classLabel = num2str(cell2mat(classes(c)));
     fprintf('Current class = %s \n', classLabel);
     imagesPath = [datasetPath classLabel '/'];
     classIndex = c;
     
     spPath = [superpixelsPath classLabel '/']; 
-    allSuprepixels = dir([superpixelsPath classLabel '/*.mat']);
+    allSuperpixels = dir([superpixelsPath classLabel '/*.mat']);
     
-    parfor i = 1:size(allSuprepixels, 1)
+    for i = 1:size(allSuperpixels, 1)
         % Load previously computed superpixels into variable segments
         fprintf('Encoding %s %d/%d\n', classLabel, i, size(allSuperpixels,1));
-        sp = load([spPath allSuprepixels(i).name]);
+        sp = load([spPath allSuperpixels(i).name]);
         
         % Also load image to which the superpixels correspond
-        imageName = [imagesPath allSuprepixels(i).name(1:end-4) '.jpg'];
+        imageName = [imagesPath allSuperpixels(i).name(1:end-4) '.jpg'];
         image = imread(imageName);
         try 
             segments = sp.segments;
