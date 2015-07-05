@@ -15,6 +15,8 @@ datasetPath = [base 'images/'];
 
 % c = parcluster;
 % matlabpool(c);
-%parpool(c);
-[encoded] = encodeDataset(datasetPath, superpixelsPath, classes);
+% parpool(c);
+tic
+encoded = encodeDataset(datasetPath, superpixelsPath, classes);
+toc
 % save('data_encoded.mat', 'encoded');

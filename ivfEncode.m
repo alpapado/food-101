@@ -5,7 +5,7 @@ function [ encoding ] = ivfEncode( data, modes )
 [means, covariances, priors] = vl_gmm(data', modes);
 
 % Perform the fisher encoding
-encoding = vl_fisher(data', means, covariances, priors, 'Improved');
+encoding = vl_fisher(data', means, covariances, priors, 'Improved', 'Fast');
 
 end
 

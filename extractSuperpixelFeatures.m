@@ -1,6 +1,9 @@
-function [ features] = extractSuperpixelFeatures( image, imageSuperpixels, superpixelIndex)
+function [features] = extractSuperpixelFeatures( imageName, imageSuperpixels, superpixelIndex)
 %extractSuperpixelFeatures Extracts SURFs and Lab values from superpixel
 % tic
+% Read image in order to compute lab values later
+image = imread(imageName);
+
 % Auxilliary variables
 [width, height, channels] = size(image);
 
@@ -11,11 +14,8 @@ else
     gray = image;
 end
 
-% Convert input image to L*a*b
-lab = vl_xyz2lab(vl_rgb2xyz(image));
-
 % Create grid on which the SURFs will be calculated
-gridStep = 4;
+gridStep = 8;
 gridX = 1:gridStep:width;
 gridY = 1:gridStep:height;
 [x ,y] = meshgrid(gridX, gridY);
@@ -37,18 +37,23 @@ indexes(indexes == 0) = [];
 spGridLocations = gridLocations(indexes, :);
 gridPoints = SURFPoints(spGridLocations);
 
-
 % Extract all SURFs for the image
 [surfs, validPoints] = extractFeatures(gray, gridPoints);
 
 % Get lab values
-validPointsLocation = validPoints.Location;
+% Convert to lab only the points of interest => computationally smarter
+validPointsLocation = validPoints.Location; % Get valid points' locations
 numValidPoints = size(validPoints, 1);
-labValues = zeros(numValidPoints, 3);
+poi = uint8(zeros(numValidPoints, 3)); % Initialize points of interest
 
 for i = 1:numValidPoints
-    labValues(i, :) = lab(validPointsLocation(i,1), validPointsLocation(i,2), :);
+    poi(i,:) = image(validPointsLocation(i,1), validPointsLocation(i,2), :);
 end
+
+% R2015a compatible
+labValues = rgb2lab(poi);
+
+% fprintf('Error = %f\n', sum(sum(labValues - labValues2)));
 
 % Fisher encoding
 modes = 64;
