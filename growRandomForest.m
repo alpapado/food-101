@@ -1,19 +1,33 @@
-function [ forest ] = growRandomForest(allData, numTrees)
+function [ trees ] = growRandomForest(numTrees, numTrainingData)
 %growRandomForest Grow a forest consisting of numTrees random trees
-%   Detailed explanation goes here
-% forest = [];
-% Read class labels from file
-n = 200 * 10^3; % 200k samples for training 
+%   numTrees : Number of trees in forest
+%   n : Number of training data for a tree
 field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
-forest(numTrees) = struct('tree', []);
+% load('validationSet.mat'); % Load validation set
+trees(numTrees) = struct('leaves', []);
+minStep = 1000;
+maxStep = 2500;
 
-parfor i = 1:numTrees
+for i = 1:numTrees
     fprintf('Tree %d\n', i);
-    data = sampleTrainingData(n, allData);
-    root = struct(field1, data, field2, [], field3, []);
+    TRAININGDATA = sampleTrainingData(numTrainingData, minStep, maxStep); % Generate training set
+    root = struct(field1, TRAININGDATA, field2, [], field3, []);
+    
+    % Train tree
     rTree = tree(root);
-    rTree = growRandomTree(data, rTree, 1);
-    forest(i).tree = rTree;
+    rTree = growRandomTree(TRAININGDATA, rTree, 1);
+    
+    % Classify validation set using previously trained tree
+%     rTree = treeClassify(rTree, validationSet);
+    
+    % Extract leaves
+    leafIndices = rTree.findleaves();
+    leaves = struct(field2, [], field3, []);
+    
+    for l = 1:length(leafIndices)
+        leaves(l) = rTree.get(leafIndices(l));
+    end
+    trees(i).leaves = leaves;
 end
 
 

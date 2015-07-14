@@ -6,7 +6,7 @@ fid = fopen('data/meta/classes.txt');
 classes = textscan(fid, '%s', 'Delimiter', '\n');
 classes = classes{1};
 
-base = 'food-101/';
+base = 'datas/';
 superpixelsPath = [base 'superpixels/'];
 
 % Generate random seed

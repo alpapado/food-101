@@ -16,11 +16,12 @@ classes = extractfield(data, 'classIndex');
 
 % Set training set
 X = features(:, 1:numTrainingData);
+
+% Set test set
 testSet = features(:, numTrainingData+1:end);
 
-infoGain = -realmax;
-bestSplitLeft = zeros(numData, 1);
-bestSplitRight = zeros(numData, 1);
+% Initialize struct to be used by all the threads for result saving
+threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
 
 for i = 1:numSVMs
     % Generate random binary partition of class labels
@@ -31,59 +32,43 @@ for i = 1:numSVMs
     while size(unique(y), 1) < 2
         y = randi([0 1], numTrainingData, 1);
     end
-    
-    % Train the SVM 1
-    svmModel = fitcsvm(X', y, 'KernelFunction', 'linear');
-    compactModel = compact(svmModel); % Discard training data
+     
+    try
+        % Train the SVM
+%         svmModel = fitcsvm(X', y, 'KernelFunction', 'linear');
+        model = discardSupportVectors(compact(fitcsvm(X', y, 'KernelFunction', 'linear'))); % Discard training data
 
-   matlab = ver;
-   if strcmp(matlab(1).Release, 'R2015a')
-       % **** R2015 only compatible ****
-       model = discardSupportVectors(compactModel); % Discard support vectors
-       % **** --------------------- ****
-   else
-       model = compactModel;
-   end
-%    try
-%        % **** R2015 only compatible ****
-%        model = discardSupportVectors(compactModel); % Discard support vectors
-%        % **** --------------------- ****
-%    catch      
-%        fprintf('exception \n');
-%        model = compactModel;
-%    end
-    
-    % Classify the rest of the data
-    svmResult = predict(model, testSet');
-    
-%     tic
-%     svmModel2 = svmtrain(X', y);
-%     svmResult2 = svmclassify(svmModel2, testSet' );
-%     toc
-    
-    split = [y; svmResult];
+        % Classify the rest of the data
+        svmResult = predict(model, testSet');
+        split = [y; svmResult];
+    catch ME
+        disp(ME.identifier);
+        continue;
+    end
 
     % Calculate information gain
     leftIndexes = split == 0;
     rightIndexes = split == 1;
-    leftClasses = extractfield(data(leftIndexes), 'classIndex');
-    rightClasses = extractfield(data(rightIndexes), 'classIndex');
+    leftClasses = classes(leftIndexes); %extractfield(data(leftIndexes), 'classIndex');
+    rightClasses = classes(rightIndexes); %extractfield(data(rightIndexes), 'classIndex');
     
-    temp = informationGain(classes, leftClasses, rightClasses);
-    
-    if temp > infoGain
-        infoGain = temp;
-        bestSplitLeft = leftIndexes;
-        bestSplitRight = rightIndexes;
-        svm = model;
-    end
+    threadStruct(i).infoGain = informationGain(classes, leftClasses, rightClasses);
+    threadStruct(i).leftSplit = leftIndexes;
+    threadStruct(i).rightSplit = rightIndexes;
+    threadStruct(i).svm = model;
     
 end
 
 % Choose the split with the largest information gain
-left = data(bestSplitLeft);
-right = data(bestSplitRight);
-
+infoGains = extractfield(threadStruct, 'infoGain');
+indexOfMaxGain = find(infoGains == max(infoGains) );
+bestSplitLeft = threadStruct(indexOfMaxGain).leftSplit;
+bestSplitRight = threadStruct(indexOfMaxGain).rightSplit;
+svm = threadStruct(indexOfMaxGain).svm;
+left = bestSplitLeft;
+right = bestSplitRight;
+% left = data(bestSplitLeft);
+% right = data(bestSplitRight);
 
 end
 

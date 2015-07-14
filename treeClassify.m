@@ -20,7 +20,7 @@ for node = iterator
     nodeCvData = rTree.get(node).cvData;
     numData = size(nodeCvData, 2);
     cvSet = reshape( extractfield(nodeCvData, 'features'), [8576, numData] );
-    split = svmclassify(svmStruct, cvSet');
+    split = predict(svmStruct, cvSet');
     cvLeft = nodeCvData(split == 0);
     cvRight = nodeCvData(split == 1);
 
