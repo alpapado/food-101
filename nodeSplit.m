@@ -33,35 +33,25 @@ for i = 1:numSVMs
     end
     
     % Train the SVM 1
-    svmModel = fitcsvm(X', y, 'KernelFunction', 'linear');
-    compactModel = compact(svmModel); % Discard training data
+    try
+        svmModel = fitcsvm(X', y, 'KernelFunction', 'linear');
+        compactModel = compact(svmModel); % Discard training data
 
-   matlab = ver;
-   if strcmp(matlab(1).Release, 'R2015a')
-       % **** R2015 only compatible ****
-       model = discardSupportVectors(compactModel); % Discard support vectors
-       % **** --------------------- ****
-   else
-       model = compactModel;
-   end
-%    try
-%        % **** R2015 only compatible ****
-%        model = discardSupportVectors(compactModel); % Discard support vectors
-%        % **** --------------------- ****
-%    catch      
-%        fprintf('exception \n');
-%        model = compactModel;
-%    end
-    
-    % Classify the rest of the data
-    svmResult = predict(model, testSet');
-    
-%     tic
-%     svmModel2 = svmtrain(X', y);
-%     svmResult2 = svmclassify(svmModel2, testSet' );
-%     toc
-    
-    split = [y; svmResult];
+       if strcmp(version('-release'), '2015a')
+           % **** R2015 only compatible ****
+           model = discardSupportVectors(compactModel); % Discard support vectors
+           % **** --------------------- ****
+       else
+           model = compactModel;
+       end
+
+        % Classify the rest of the data
+        svmResult = predict(model, testSet');
+        split = [y; svmResult];
+    catch ME
+        disp(ME.identifier);
+        continue;
+    end
 
     % Calculate information gain
     leftIndexes = split == 0;

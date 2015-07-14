@@ -50,7 +50,7 @@ for i = 1:numValidPoints
     poi(i,:) = image(validPointsLocation(i,1), validPointsLocation(i,2), :);
 end
 
-% R2015a compatible
+% R2015a only compatible
 labValues = rgb2lab(poi);
 
 % fprintf('Error = %f\n', sum(sum(labValues - labValues2)));

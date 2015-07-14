@@ -1,4 +1,4 @@
-function [ encoded] = encodeDataset(datasetPath, superpixelsPath, classes)
+function encodeDataset(datasetPath, superpixelsPath, classes)
 %encodeDataset Calculates surfs and lab values and fisher encodes them, for
 %the entire dataset
 
@@ -8,24 +8,28 @@ field3 = 'classIndex'; value3 = 0;
 field4 = 'image'; value4 = '';
 
 numClasses = length(classes);
-j = 0;
 
 for c = 1:numClasses
     classLabel = num2str(cell2mat(classes(c)));
+    if exist(['done/' classLabel '.mat'], 'file') == 2
+        fprintf('File exists\n');
+        continue;
+    end
+    
     fprintf('Current class = %s \n', classLabel);
-%     imagesPath = [datasetPath classLabel '/'];
-%     classIndex = c;
+    imagesPath = [datasetPath classLabel '/'];
+    classIndex = c;
     encoded = [];
     spPath = [superpixelsPath classLabel '/']; 
     allSuperpixels = dir([superpixelsPath classLabel '/*.mat']);
 
-    for i = 1:length(allSuperpixels)
+    parfor i = 1:length(allSuperpixels)
         % Load previously computed superpixels into variable segments
-%         fprintf('Encoding %s %d/%d\n', classLabel, i, size(allSuperpixels,1));
+        fprintf('Encoding %s %d/%d\n', classLabel, i, size(allSuperpixels,1));
         sp = load([spPath allSuperpixels(i).name]);
         
         % Also load image to which the superpixels correspond
-%         imageName = [imagesPath allSuperpixels(i).name(1:end-4) '.jpg'];
+        imageName = [imagesPath allSuperpixels(i).name(1:end-4) '.jpg'];
         
         try 
             segments = sp.segments;
@@ -36,25 +40,24 @@ for c = 1:numClasses
         % For every superpixels in the image call extractSuperpixelFeatures
         numSuperpixels = max(max(segments));
         for s = 1:numSuperpixels;
-%             try
-%                 features = extractSuperpixelFeatures( imageName, segments, s);
-%                 temp = struct(field1, value1, field2, value2, field3, value3, field4, value4);
-%                 temp.features = features;
-%                 temp.classLabel = classLabel;
-%                 temp.classIndex = classIndex;
-%                 temp.image = imageName;
-%                 encoded = [encoded; temp];
-%             catch ME
-% %                 msgString = getReport(ME);
-% %                 disp(msgString);
-%             end
-            j = j + 1;
+            try
+                features = extractSuperpixelFeatures( imageName, segments, s);
+                temp = struct(field1, value1, field2, value2, field3, value3, field4, value4);
+                temp.features = features;
+                temp.classLabel = classLabel;
+                temp.classIndex = classIndex;
+                temp.image = imageName;
+                encoded = [encoded; temp];
+            catch
+%                 msgString = getReport(ME);
+%                 disp(msgString);
+            end
         end
 
     end
 
-%     save(classLabel, 'encoded');
+    save(['done/' classLabel], 'encoded');
 end
-j
+
 end
 

@@ -3,3 +3,4 @@ data/*
 *~
 *.mat
 vlfeat/*
+done/*
