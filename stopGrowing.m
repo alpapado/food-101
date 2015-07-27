@@ -1,4 +1,4 @@
-function [ stop ] = stopGrowing( node, tree, nodeId )
+function [ stop ] = stopGrowing( trSetIndexes, tree, nodeId )
 %stopGrowing Checks the termination conditions for stopping the random tree
 %growth
 %   Conditions include:
@@ -10,20 +10,21 @@ function [ stop ] = stopGrowing( node, tree, nodeId )
 %   a) features 
 %   b) classLabel
 %   c) classIndex
+global TRAININGSET
 
 stop = false;
 maxDepth = 7;
 minSamples = 25;
 
 % Check condition #1
-numData = size(node, 2);
+numData = size(trSetIndexes, 2);
 if numData < minSamples
     fprintf('Too few samples left\n');
     stop = true;
 end
 
 % Check condition #2
-classes = extractfield(node, 'classIndex');
+classes = extractfield(TRAININGSET(trSetIndexes), 'classIndex');
 if numel(unique(classes)) == 1
     fprintf('Single class samples left\n');
     stop = true;

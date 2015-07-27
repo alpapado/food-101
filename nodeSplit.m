@@ -1,9 +1,12 @@
-function [ left, right, svm ] = nodeSplit( data )
+function [ left, right, svm ] = nodeSplit( trSetIndexes )
 %nodeSplit Splits the input data in two parts
 %   Generate n binary SVMs as decision functions on random binary partitions
 %   of the class labels in data. Hold the one that maximizes the
 %   information gain criterion.
 % data: Struct containing fields: features, class,
+global TRAININGSET;
+
+data = TRAININGSET(trSetIndexes);
 
 % Number of SVM models to be trained as decision function
 numSVMs = 100;
@@ -12,7 +15,7 @@ numSVMs = 100;
 numData = size(data, 2);
 numTrainingData = min(20*10^3, floor(0.6 * numData)); % decision function training data
 features = reshape( extractfield(data, 'features'), [8576, numData] );
-classes = extractfield(data, 'classIndex');
+classes = extractfield(TRAININGSET, 'classIndex');
 
 % Set training set
 X = features(:, 1:numTrainingData);
@@ -23,7 +26,7 @@ testSet = features(:, numTrainingData+1:end);
 % Initialize struct to be used by all the threads for result saving
 threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
 
-for i = 1:numSVMs
+parfor i = 1:numSVMs
     % Generate random binary partition of class labels
     y = randi([0 1], numTrainingData, 1);
     
@@ -47,10 +50,10 @@ for i = 1:numSVMs
     end
 
     % Calculate information gain
-    leftIndexes = split == 0;
-    rightIndexes = split == 1;
-    leftClasses = classes(leftIndexes); %extractfield(data(leftIndexes), 'classIndex');
-    rightClasses = classes(rightIndexes); %extractfield(data(rightIndexes), 'classIndex');
+    leftIndexes = trSetIndexes(split == 0);
+    rightIndexes = trSetIndexes(split == 1);
+    leftClasses = classes(leftIndexes);
+    rightClasses = classes(rightIndexes);
     
     threadStruct(i).infoGain = informationGain(classes, leftClasses, rightClasses);
     threadStruct(i).leftSplit = leftIndexes;
@@ -67,8 +70,6 @@ bestSplitRight = threadStruct(indexOfMaxGain).rightSplit;
 svm = threadStruct(indexOfMaxGain).svm;
 left = bestSplitLeft;
 right = bestSplitRight;
-% left = data(bestSplitLeft);
-% right = data(bestSplitRight);
 
 end
 
