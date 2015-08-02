@@ -1,36 +1,38 @@
-function [ rTree ] = growRandomForest(numTrees, numTrainingData)
-%growRandomForest Grow a forest consisting of numTrees random trees
+function [ trees ] = growRandomForest(numTrees, n)
+%growRandomForest Grows a random forest
 %   numTrees : Number of trees in forest
 %   n : Number of training data for a tree
-field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
-% load('validationSet.mat'); % Load validation set
 trees(numTrees) = struct('leaves', []);
-minStep = 100;
-maxStep = 250;
-global TRAININGSET;
-global VALIDATIONDATA;
-VALIDATIONDATA = TRAININGSET;
 
 for i = 1:numTrees
     fprintf('Tree %d\n', i);
-    TRAININGSET = sampleTrainingData(numTrainingData, minStep, maxStep); % Generate training set
-    root = struct(field1, 1:length(TRAININGSET), field2, [], field3, []);
     
+    % Load training set
+    mfile = matfile(['tree' num2str(i) '.mat']);
+    trSet = mfile.trainingSet(1, 1:n);
+          
     % Train tree
+    rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trSet, 'classIndex'));
+    root = struct('trData', rootTrData, 'cvData', [], 'svm', []); % Set root node
     rTree = tree(root);
-    rTree = growRandomTree(rTree, 1);
+    rTree = growRandomTree(rTree, 1, trSet); % Grow starting from 2nd node
     
     % Classify validation set using previously trained tree
+%     load('validationSet');
 %     rTree = treeClassify(rTree, validationSet);
     
     % Extract leaves
 %     leafIndices = rTree.findleaves();
-%     leaves = struct(field2, [], field3, []);
+%     leaves = struct('cvData', [], 'classIndex', [], 'classLabel', []);
 %     
 %     for l = 1:length(leafIndices)
-%         leaves(l) = rTree.get(leafIndices(l));
+%         leaf = rTree.get(leafIndices(l));
+%         leaves(l).cvData = leaf.cvData;
+%         leaves(l).classIndex = extractfield(validationSet(leaf.cvData), 'classIndex');
+%         leaves(l).classLabel = extractfield(validationSet(leaf.cvData), 'classLabel');
 %     end
-%     trees(i).leaves = leaves;
+    trees(i).leaves = rTree;
+    
 end
 
 

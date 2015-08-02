@@ -1,5 +1,5 @@
-function parSave( fname, segments )
+function parSave( fname, trainingSet)
 %parSave Save from inside a parfor loop
-save( fname, 'segments' );
+save( fname, 'trainingSet');
 end
 

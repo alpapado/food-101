@@ -16,6 +16,7 @@ for i = 1:numModels
     X = reshape(extractfield(leaf.cvData, 'features'), [8576, numData]);
     y = double(leafClasses == class);
 
+    % TODO: Use liblinear instead of matlab built-in
     % Train model
     SVMModel = fitcsvm(X',y,'KernelScale','auto', 'Cost', cost, 'KernelFunction', 'linear');
     

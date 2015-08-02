@@ -1,6 +1,6 @@
 % clear all
 % Load tree/forest
-load('tree.mat');
+load('rtree5k.mat');
 
 % Load validation set
 load('s1k.mat');

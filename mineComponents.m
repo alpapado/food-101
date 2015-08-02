@@ -1,17 +1,8 @@
-function [ models ] = mineComponents( rTree, validationSet, numComponents, numClasses )
+function [ models ] = mineComponents( leaves, validationSet, numComponents, numClasses )
 %mineComponents Summary of this function goes here
 %   Detailed explanation goes here
 
-% Get leaves of tree/forest
-leafIndx = rTree.findleaves();
-numLeaves = size(leafIndx, 2);
-field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
-leaves = struct(field1, [], field2, [], field3, []);
 models(numClasses, numComponents) = struct('svm', []);
-
-for i = 1:numLeaves
-    leaves(i) = rTree.get(leafIndx(i));
-end
 
 % Compute distinctivess measure for all leaves
 distinct = distinctiveness(leaves, validationSet, numClasses);

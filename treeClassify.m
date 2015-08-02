@@ -1,14 +1,13 @@
-function [ rTree ] = treeClassify(rTree)
+function [ rTree ] = treeClassify(rTree, validationSet)
 %treeClassify Classify data using the given tree
 % Data is contained in the root of the tree at first and is gradually
 % split into the other nodes of the tree
-global VALIDATIONDATA
 
 iterator = rTree.breadthfirstiterator;
 
 % Assign all the cv data to the root of the tree
 temp = rTree.get(1);
-temp.cvData = 1:length(VALIDATIONDATA);
+temp.cvData = 1:length(validationSet);
 rTree = rTree.set(1, temp);
 
 for node = iterator
@@ -17,12 +16,12 @@ for node = iterator
         continue;
     end
 
-    svmStruct = rTree.get(node).svm;
+    model = rTree.get(node).svm;
     cvDataIndices = extractfield(rTree.get(node), 'cvData');
-    nodeCvData = VALIDATIONDATA(cvDataIndices);
+    nodeCvData = validationSet(cvDataIndices);
     numData = size(nodeCvData, 2);
-    cvSet = reshape( extractfield(nodeCvData, 'features'), [8576, numData] );
-    split = predict(svmStruct, cvSet');
+    cvSet = transpose(reshape( extractfield(nodeCvData, 'features'), [8576, numData] ));
+    split = predict(zeros(numData,1), sparse(double(cvSet)), model, '-q');
     cvLeft = cvDataIndices(split == 0);
     cvRight = cvDataIndices(split == 1);
 

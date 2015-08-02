@@ -13,7 +13,7 @@ for l = 1:numLeaves
     if isempty(leaves(l).cvData)
         continue
     end
-    leafClasses = extractfield(leaves(l).cvData, 'classIndex');
+    leafClasses = extractfield(leaves(l).trData, 'classIndex');
     for y = 1:numClasses
         classDist(y,l) = sum(leafClasses == y) / numel(leafClasses);
     end

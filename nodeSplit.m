@@ -1,32 +1,38 @@
-function [ left, right, svm ] = nodeSplit( trSetIndexes )
+function [ left, right, svm ] = nodeSplit( trainingSet, trainingSetIndexes )
 %nodeSplit Splits the input data in two parts
-%   Generate n binary SVMs as decision functions on random binary partitions
-%   of the class labels in data. Hold the one that maximizes the
+%   Generates n binary SVMs as decision functions on random binary partitions
+%   of the class labels in data. Keeps the one that maximizes the
 %   information gain criterion.
-% data: Struct containing fields: features, class,
-global TRAININGSET;
-
-data = TRAININGSET(trSetIndexes);
+% trainingSet: The total training set on which the tree is being grown. 
+% Note that since it is not changed inside the function body, no copy is created.
+% That is useful for saving memory space
+% trSetIndexes: Indexes of the total training set that define the input data for
+% the current tree node
+left = struct('trainingIndex', [], 'classIndex', []);
+right = struct('trainingIndex', [], 'classIndex', []);
 
 % Number of SVM models to be trained as decision function
 numSVMs = 100;
 
 % Set SVM parameters
-numData = size(data, 2);
-numTrainingData = min(20*10^3, floor(0.6 * numData)); % decision function training data
-features = reshape( extractfield(data, 'features'), [8576, numData] );
-classes = extractfield(TRAININGSET, 'classIndex');
+numData = length(trainingSetIndexes);
+numTrainingData = min(10*10^3, floor(0.6 * numData)); 
+classes = extractfield(trainingSet, 'classIndex');
 
-% Set training set
-X = features(:, 1:numTrainingData);
+X = transpose(reshape(extractfield(trainingSet(trainingSetIndexes), 'features'), [8576, numData]));
 
-% Set test set
-testSet = features(:, numTrainingData+1:end);
+% Remember to clear unwanted variables
+
+% NOTE TO SELF: X and testSet fit in memory (3.5 gb). The problem lies in
+% converting them to sparse format which requires them to be converted to
+% doubles which doubles the required memory (7gb). In addition with the
+% loading of the entire training set in memory (3.5gb) and the possible
+% memory requirements of the svm training, out of memory happens.
 
 % Initialize struct to be used by all the threads for result saving
 threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
 
-parfor i = 1:numSVMs
+for i = 1:numSVMs
     % Generate random binary partition of class labels
     y = randi([0 1], numTrainingData, 1);
     
@@ -37,21 +43,45 @@ parfor i = 1:numSVMs
     end
      
     try
-        % Train the SVM
-%         svmModel = fitcsvm(X', y, 'KernelFunction', 'linear');
-        model = discardSupportVectors(compact(fitcsvm(X', y, 'KernelFunction', 'linear'))); % Discard training data
+        % Train the SVM and discard training data
+%         tic;
+%         fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
+        model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 2 -n 8 -q');
+%         toc
+      
+%         fprintf('Classifying %d instances...\n', numData-numTrainingData);
+        
+        % Classify the rest of the data by spliting them in blocks for
+        % memory efficiency
+        numChunks = 8;
+        chunkSize = ceil((numData - numTrainingData) / numChunks);
 
-        % Classify the rest of the data
-        svmResult = predict(model, testSet');
-        split = [y; svmResult];
+%         tic;
+        split = zeros(numData, 1);
+        split(1:length(y)) = y;     
+        for j = 1:numChunks
+            startIndex = numTrainingData + 1 + (j-1) * chunkSize;
+            endIndex = min(startIndex + chunkSize - 1, numData);
+            result = predict(zeros(length(startIndex:endIndex), 1), sparse(double(X(startIndex:endIndex, :))), model, '-q');
+            split(startIndex:endIndex) = result;
+        end
+%         toc
+        
+        % Standard approach that uses too much memory
+%        tic
+%        svmResult = predict(zeros(numData-numTrainingData, 1), sparse(double(X(numTrainingData+1:numData, :))), model, '-q');    
+%        split2 = [y; svmResult];
+%        isequal(split, split2)
+%        toc
+
     catch ME
-        disp(ME.identifier);
+        disp(ME);
         continue;
     end
 
     % Calculate information gain
-    leftIndexes = trSetIndexes(split == 0);
-    rightIndexes = trSetIndexes(split == 1);
+    leftIndexes = trainingSetIndexes(split == 0);
+    rightIndexes = trainingSetIndexes(split == 1);
     leftClasses = classes(leftIndexes);
     rightClasses = classes(rightIndexes);
     
@@ -68,8 +98,11 @@ indexOfMaxGain = find(infoGains == max(infoGains) );
 bestSplitLeft = threadStruct(indexOfMaxGain).leftSplit;
 bestSplitRight = threadStruct(indexOfMaxGain).rightSplit;
 svm = threadStruct(indexOfMaxGain).svm;
-left = bestSplitLeft;
-right = bestSplitRight;
+
+left.trainingIndex = bestSplitLeft;
+left.classIndex = classes(bestSplitLeft);
+right.trainingIndex = bestSplitRight;
+right.classIndex = classes(bestSplitRight);
 
 end
 

@@ -1,28 +1,42 @@
-function [ randomTree ] = growRandomTree(randomTree, parentId )
-%growRandomTree Grows a random tree on the given training set.
-%   trainingSet: Struct containing 2 fields: features, class
-% On each node, many decision functions are generated. The decision
-% function that achieves the highest information gain is kept. Binary SVMs
-% on a random binary partition of the class labels are used as decision 
-% functions
-%global TRAININGSET;
+function [ randomTree ] = growRandomTree(randomTree, parentId, trainingSet )
+%growRandomTree Grows a random binary tree on the given training set.
+% 
+% Grows a binary tree with the following procedure:
+% On each node, a number of linear SVMs is generated on random binary
+% partitions of the class labels, to be used as decision functions. 
+% Among all the generated svm models, the one that
+% provides the largest information gain is selected and is used to split
+% the input data of the node into two parts.
 
-% TODO: trData, cvData must be indexes pointing to the original training struct
-% instead of full structs themselves
+% Each node of the tree contains the following variables:
+% trData: Indexes pointing to the tree training set, that show which
+%data from the training set have made it to this node.
+% cvData: Indexes pointing to the tree validation set, that show which data
+%from the validation set have made it to this node.
+% svm: The decision function that has been appointed to this node. If the
+%node is a leaf of the tree, svm is empty.
+
+% The function accepts the following inputs:
+% randomTree: Variable of type 'tree', that holds the growing tree and that
+%is updated as the tree growing process continues.
+% parentId: Variable that shows which node of the tree is the caller of the
+%function. ('growRandomTree' is a recursive function so this is an
+%auxilliary variable)
+% trainingSet: A reference to the entire training set that is used for
+%growing the tree. Since it is not changed inside this function no copy of
+%it is created and no memory issue arises.
+
 
 % Node fields
 field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
 
 % Calculate the splits
 parent = randomTree.get(parentId);
-[left, right, svm] = nodeSplit(parent.trData);
+[left, right, svm] = nodeSplit(trainingSet, extractfield(parent.trData, 'trainingIndex'));
 
 % Set parents svm
 parent.svm = svm;
 randomTree = randomTree.set(parentId, parent);
-
-% Discard parents' training data after training
-% temp2 = rmfield(temp, 'trData');
 
 % Set left node
 leftNode = struct(field1, left, field2, [], field3, []);
@@ -33,30 +47,20 @@ rightNode = struct(field1, right, field2, [], field3, []);
 [randomTree, newNodeRightId] = randomTree.addnode(parentId, rightNode);
 
 % FOR DEBUGGING PURPOSES
-fprintf('parent: %s\n', num2str(parent.trData));
-fprintf('left: %s\n', num2str(leftNode.trData));
-fprintf('right: %s\n\n', num2str(rightNode.trData));
+% fprintf('parent: %s\n', num2str(length(parent.trData.classIndex)));
+% fprintf('left: %s\n', num2str(length(leftNode.trData.classIndex)));
+% fprintf('right: %s\n\n', num2str(length(rightNode.trData.classIndex)));
 
 % Has the termination criterion been met?
 % If not split each new node in 2
-stopLeft = stopGrowing(left, randomTree, newNodeLeftId);
+stopLeft = stopGrowing(trainingSet, left.trainingIndex, randomTree, newNodeLeftId);
 if stopLeft ~= true
-    randomTree = growRandomTree(randomTree, newNodeLeftId);
-% else
-    % Discard training set
-%     temp = randomTree.get(newNodeLeftId);
-%     temp2 = rmfield(temp, 'trData');
-%     randomTree = randomTree.set(newNodeLeftId, temp2);
+    randomTree = growRandomTree(randomTree, newNodeLeftId, trainingSet);
 end
 
-stopRight = stopGrowing(right, randomTree, newNodeRightId);
+stopRight = stopGrowing(trainingSet, right.trainingIndex, randomTree, newNodeRightId);
 if  stopRight ~= true
-    randomTree = growRandomTree(randomTree, newNodeRightId);
-% else
-    % Discard training set
-%     temp = randomTree.get(newNodeRightId);
-%     temp2 = rmfield(temp, 'trData');
-%     randomTree = randomTree.set(newNodeRightId, temp2);
+    randomTree = growRandomTree(randomTree, newNodeRightId, trainingSet);
 end
 
 
