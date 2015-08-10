@@ -24,7 +24,6 @@ for node = iterator
     split = predict(zeros(numData,1), sparse(double(cvSet)), model, '-q');
     cvLeft = cvDataIndices(split == 0);
     cvRight = cvDataIndices(split == 1);
-
     children = rTree.getchildren(node);
     leftId = children(1);
     rightId = children(2);

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 function shuffledValidationSet = extractValidationSet(n)
+=======
+function validationSet = extractValidationSet(n)
+>>>>>>> ae9dd03f6aced89ed60d1f9ff15778d846068647
 %extractValidationSet Summary of this function goes here
 %   Detailed explanation goes here
 % n : samples per class (1000)
@@ -37,7 +41,10 @@ for y = 1:length(classes)
     clear encoded
 end
 
+<<<<<<< HEAD
 permutation = randperm(length(validationSet));
 shuffledValidationSet = validationSet(permutation);
+=======
+>>>>>>> ae9dd03f6aced89ed60d1f9ff15778d846068647
 end
 
