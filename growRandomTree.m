@@ -9,10 +9,10 @@ function [ randomTree ] = growRandomTree(randomTree, parentId, trainingSet )
 % the input data of the node into two parts.
 
 % Each node of the tree contains the following variables:
-% trData: Indexes pointing to the tree training set, that show which
-%data from the training set have made it to this node.
-% cvData: Indexes pointing to the tree validation set, that show which data
-%from the validation set have made it to this node.
+% trData: Indexes pointing to the tree training set and their corresponding 
+%classes, that show which data from the training set have made it to this node.
+% cvData: Indexes pointing to the tree validation set and their corresponding 
+% classes, that show which data from the validation set have made it to this node.
 % svm: The decision function that has been appointed to this node. If the
 %node is a leaf of the tree, svm is empty.
 

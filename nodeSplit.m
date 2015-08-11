@@ -44,19 +44,16 @@ for i = 1:numSVMs
      
     try
         % Train the SVM and discard training data
-%         tic;
-%         fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
+        fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
         model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 2 -n 8 -q');
-%         toc
       
-%         fprintf('Classifying %d instances...\n', numData-numTrainingData);
+        fprintf('Classifying %d instances...\n', numData-numTrainingData);
         
         % Classify the rest of the data by spliting them in blocks for
         % memory efficiency
         numChunks = 8;
         chunkSize = ceil((numData - numTrainingData) / numChunks);
 
-%         tic;
         split = zeros(numData, 1);
         split(1:length(y)) = y;     
         for j = 1:numChunks
@@ -64,15 +61,7 @@ for i = 1:numSVMs
             endIndex = min(startIndex + chunkSize - 1, numData);
             result = predict(zeros(length(startIndex:endIndex), 1), sparse(double(X(startIndex:endIndex, :))), model, '-q');
             split(startIndex:endIndex) = result;
-        end
-%         toc
-        
-        % Standard approach that uses too much memory
-%        tic
-%        svmResult = predict(zeros(numData-numTrainingData, 1), sparse(double(X(numTrainingData+1:numData, :))), model, '-q');    
-%        split2 = [y; svmResult];
-%        isequal(split, split2)
-%        toc
+        end      
 
     catch ME
         disp(ME);
@@ -85,7 +74,7 @@ for i = 1:numSVMs
     leftClasses = classes(leftIndexes);
     rightClasses = classes(rightIndexes);
     
-    threadStruct(i).infoGain = informationGain(classes, leftClasses, rightClasses);
+    threadStruct(i).infoGain = informationGain(classes(trainingSetIndexes), leftClasses, rightClasses);
     threadStruct(i).leftSplit = leftIndexes;
     threadStruct(i).rightSplit = rightIndexes;
     threadStruct(i).svm = model;
@@ -97,8 +86,9 @@ infoGains = extractfield(threadStruct, 'infoGain');
 indexOfMaxGain = find(infoGains == max(infoGains) );
 bestSplitLeft = threadStruct(indexOfMaxGain).leftSplit;
 bestSplitRight = threadStruct(indexOfMaxGain).rightSplit;
-svm = threadStruct(indexOfMaxGain).svm;
 
+% Set return parameters
+svm = threadStruct(indexOfMaxGain).svm;
 left.trainingIndex = bestSplitLeft;
 left.classIndex = classes(bestSplitLeft);
 right.trainingIndex = bestSplitRight;
