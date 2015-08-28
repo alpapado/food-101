@@ -1,4 +1,4 @@
-function [ models ] = trainModels( topLeaves, class )
+function [ models ] = trainModels( topLeaves, class, validationSet )
 %trainModels For each leaf in the topLeaves list trains a SVM
 %   The samples belonging to the given class in each leaf are used as
 %   positive examples while a large repository of negative samples,
@@ -7,40 +7,37 @@ function [ models ] = trainModels( topLeaves, class )
 %   mining.
 numModels = length(topLeaves);
 models(numModels) = struct('svm', []);
-cost = struct('ClassNames', [0, 1], 'ClassificationCosts', [0 15; 30 0]);
 
 for i = 1:numModels
     leaf = topLeaves(i);
-    numData = length(leaf.cvData);
-    leafClasses = extractfield(leaf.cvData, 'classIndex');
-    X = reshape(extractfield(leaf.cvData, 'features'), [8576, numData]);
-    y = double(leafClasses == class);
 
-    % TODO: Use liblinear instead of matlab built-in
+    leafClasses = extractfield(leaf.cvData, 'classIndex');
+    vsetIndexes = extractfield(leaf.cvData, 'validationIndex');
+    numData = length(vsetIndexes);
+    
+    % Balance the training set
+    tempX = transpose(reshape(extractfield(validationSet(vsetIndexes), 'features'), [8576, numData]));
+    tempY = transpose(double(leafClasses == class));
+ 
+    negatives = find(tempY==0);
+    positives = find(tempY==1);
+%     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
+    
+    negativesToKeep = negatives(1:length(positives)+50);
+    tempY = tempY([positives; negativesToKeep]);
+    tempX = tempX([positives; negativesToKeep], :);
+    
+    permutation = randperm(length(tempY));
+    X = tempX(permutation, :);
+    y = tempY(permutation);
+
+%     fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
     % Train model
-    SVMModel = fitcsvm(X',y,'KernelScale','auto', 'Cost', cost, 'KernelFunction', 'linear');
-    
-     % The full svm model is too large to save, considering that about 2000
-     % such models will be saved. So, it must be shrunk
-    compactModel = compact(SVMModel); % Discard training data
-    
-    try
-        % **** R2015 only compatible ****
-        reducedModel = discardSupportVectors(compactModel); % Discard support vectors
-        % **** --------------------- ****
-        models(i).svm = reducedModel;
-%         p = predict(reducedModel, X');
-    catch
-        fprintf('exception \n');
-        models(i).svm = compactModel;
-%         p = predict(compactModel, X');
-    end
-       
-%     pos = sum(y==1);
-%     neg = sum(y==0);
-%     acc = sum(p==y') ./ length(y);
-    eval = evaluateModel(models(i).svm, X', y);
-    fprintf('Examples = %d Accuracy = %s\n', length(y), num2str(eval(1)));
+    model = train(y, sparse(double(X)), '-s 2 -n 8 -q');
+    models(i).svm = model;
+
+%     eval = evaluateModel(model, X, y);
+%     fprintf('F-measure = %s\n', num2str(eval(4)));
     
     % TODO Hard negative mining
 end

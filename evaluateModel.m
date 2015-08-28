@@ -9,7 +9,7 @@
 % Output: EVAL = Row matrix with all the performance measures
 
 actual = labels;
-predicted = predict(model, validationSet);
+predicted = predict(double(labels), sparse(double(validationSet)), model, '-q');
 
 idx = (actual()==1);
 
@@ -33,5 +33,4 @@ recall = sensitivity;
 f_measure = 2 * ((precision * recall) / (precision + recall));
 gmean = sqrt(tp_rate * tn_rate);
 
-% eval = [accuracy sensitivity specificity precision recall f_measure gmean];
 eval = [accuracy precision recall f_measure ];

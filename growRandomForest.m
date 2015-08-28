@@ -2,7 +2,7 @@ function [ trees ] = growRandomForest(numTrees, n)
 %growRandomForest Grows a random forest
 %   numTrees : Number of trees in forest
 %   n : Number of training data for a tree
-trees(numTrees) = struct('leaves', []);
+trees(numTrees) = struct('tree', [], 'leaves', []);
 
 for i = 1:numTrees
     fprintf('Tree %d\n', i);
@@ -23,7 +23,7 @@ for i = 1:numTrees
     % TODO: Maybe move cross validating somewhere else because of its heavy
     % memory requirements
     load('validationSet');
-    rTree = treeClassify(rTree, validationSet(1:n));
+    rTree = treeClassify(rTree, validationSet);
     clear validationSet
     
     % Extract leaves
@@ -34,10 +34,9 @@ for i = 1:numTrees
         leaf = rTree.get(leafIndices(l));
         leaves(l).trData = leaf.trData;
         leaves(l).cvData = leaf.cvData;
-%         leaves(l).cvData = leaf.cvData;
-%         leaves(l).classIndex = extractfield(validationSet(leaf.cvData.validationIndexes), 'classIndex');
-%         leaves(l).classLabel = extractfield(validationSet(leaf.cvData), 'classLabel');
     end
+    
+    trees(i).tree = rTree;
     trees(i).leaves = leaves;
     
 end

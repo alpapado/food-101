@@ -44,10 +44,10 @@ for i = 1:numSVMs
      
     try
         % Train the SVM and discard training data
-        fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
+%        fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
         model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 2 -n 8 -q');
       
-        fprintf('Classifying %d instances...\n', numData-numTrainingData);
+%       fprintf('Classifying %d instances...\n', numData-numTrainingData);
         
         % Classify the rest of the data by spliting them in blocks for
         % memory efficiency

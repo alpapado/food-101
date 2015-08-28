@@ -1,16 +1,16 @@
 function [ prunedLeaves] = pruneLeaves( sortedLeaves )
-%pruneLeaves Remove the leaves whose samples consist of more than half of
+%pruneLeaves Removes the leaves whose samples consist of more than half of
 %the same superpixels as any better scoring leaf.
 %   Detailed explanation goes here
+fprintf('Pruning leaves\n');
+
 numLeaves = length(sortedLeaves);
-field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
-prunedLeaves = struct(field1, [], field2, [], field3, []);
+prunedLeaves = struct('trData', [], 'cvData', []);
 toRemove = zeros(numLeaves, 1);
 
-field4 = 'samples'; value4 = [];
-leafSamples = struct(field4, value4);
+leafSamples = struct('samples', []);
 for l = 1:numLeaves
-    leafSamples(l).samples = extractfield(sortedLeaves(l).cvData, 'id');
+    leafSamples(l).samples = extractfield(sortedLeaves(l).cvData, 'validationIndex');
 end
 
 for l = 1:numLeaves

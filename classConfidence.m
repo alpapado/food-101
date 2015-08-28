@@ -1,19 +1,26 @@
-function [ classConf, classDist, delta ] = classConfidence( leaves, cvSet, numClasses )
-%classConfidence Summary of this function goes here
-%   Detailed explanation goes here
-% classConf(y,s) : Confidence that sample s belongs to class y
+function [ classConf, classDist, delta ] = classConfidence( leaves, params )
+%classConfidence Calculates the class confidence scores for each sample in
+%the validation set
+%   The class confidence score for a sample s belonging in class y is 
+% defined as the products of delta(l,s) with p(y,l), sumed over every
+% leaf in the forest and divided by the number of trees in the forest.
 
-% numLeaves = size(leaves, 2);
-numSamples = size(cvSet, 2);
+% classConf(y,s) : Confidence that sample s belongs to class y
+% classDist(y,l) : Empirical distribution of the class y in leaf l
+% delta(l,s) : Auxilliary variable that indicates presence or not of sample
+% s in leaf l
+
+numTrees = params.numTrees;
+numClasses = params.numClasses;
+
+numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) / numTrees;
 classConf = zeros(numClasses, numSamples);
 
-% CHANGE THIS OR DIE VIOLENTLY
-numTrees = 1;
-% ----------------------------
 
 classDist = classDistribution(leaves, numClasses);
-delta = computeDeltas(leaves, cvSet);
+delta = computeDeltas(leaves, numTrees);
 
+fprintf('Calculating class confidence\n');
 for y = 1:numClasses
     for s = 1:numSamples
         classConf(y,s) = sum( delta(:,s) .* classDist(y,:)' );
