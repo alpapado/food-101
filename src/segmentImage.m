@@ -1,4 +1,4 @@
-function [ segments ] = segmentImage( image )
+function segments = segmentImage(image)
 %segmentImage Performs segmentation on an image using the SLIC algorithm
 %   image: The image to be segmented
 %   segments: The produced segments by the SLIC algorithm
@@ -13,7 +13,9 @@ regularizer = 0.01;
 imlab = vl_xyz2lab(vl_rgb2xyz(image));
 
 % Compute the segmentation
-segments = vl_slic(single(imlab), regionSize, regularizer) ;
+% Add one to the result in order to start the superpixel indexing from one
+% instead of zero
+segments = vl_slic(single(imlab), regionSize, regularizer) + 1;
 
 end
 

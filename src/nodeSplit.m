@@ -1,4 +1,4 @@
-function [ left, right, svm ] = nodeSplit( trainingSet, trainingSetIndexes )
+function [left, right, svm] = nodeSplit(trainingSet, trainingSetIndexes)
 %nodeSplit Splits the input data in two parts
 %   Generates n binary SVMs as decision functions on random binary partitions
 %   of the class labels in data. Keeps the one that maximizes the
@@ -6,7 +6,7 @@ function [ left, right, svm ] = nodeSplit( trainingSet, trainingSetIndexes )
 % trainingSet: The total training set on which the tree is being grown. 
 % Note that since it is not changed inside the function body, no copy is created.
 % That is useful for saving memory space
-% trSetIndexes: Indexes of the total training set that define the input data for
+% trainingSetIndexes: Indexes of the total training set that define the input data for
 % the current tree node
 left = struct('trainingIndex', [], 'classIndex', []);
 right = struct('trainingIndex', [], 'classIndex', []);
@@ -93,6 +93,20 @@ left.trainingIndex = bestSplitLeft;
 left.classIndex = classes(bestSplitLeft);
 right.trainingIndex = bestSplitRight;
 right.classIndex = classes(bestSplitRight);
+
+end
+
+function infoGain = informationGain(data, dataLeft, dataRight)
+%informationGain Computes the information gain from partitioning data into
+%dataLeft and dataRight
+%   The information gain is computed, using the 'shannon' formula for
+%   the entropy in a vector
+type = 'shannon';
+
+entropyLeft = numel(dataLeft) * wentropy(dataLeft, type) / numel(data);
+entropyRight = numel(dataRight) * wentropy(dataRight, type) / numel(data);
+initialEntropy = wentropy(data, type);
+infoGain = initialEntropy - entropyLeft - entropyRight;
 
 end
 

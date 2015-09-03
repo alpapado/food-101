@@ -17,13 +17,14 @@ for l = 1:levels
         cell = cells(c);
        
         % Points of image that fall inside the current cell
-        xv = cell.xv;
-        yv = cell.yv;
+        xv = round(cell.xv);
+        yv = round(cell.yv);
 
         % Make sure this works
         temp = unique(segments(min(xv):max(xv), min(yv):max(yv)));
         
         % Reject segments that were too small to be encoded
+%         validSegments
         indexOfInvalids = find(validSegments == 0);
         toKeep = ones(length(temp), 1);
         for t = 1:length(temp)
@@ -31,22 +32,11 @@ for l = 1:levels
                 toKeep(t) = 0;
             end
         end
-
-        grid(i).spixelsToAverage = temp(logical(toKeep));
-        
-        
+        temp(logical(toKeep));
+        grid(i).spixelsToAverage = temp(logical(toKeep));  
         i = i + 1;
-%        figure(1)
-% 
-%         plot(xv,yv) % polygon
-%         axis equal
-% 
-%         hold on
-%         plot(xq(in),yq(in),'r+') % points inside
-%         plot(xq(~in),yq(~in),'bo') % points outside
-%         hold off
-%        size(in)
-%        pause
+
+        % Error fix it
     end
 end
 
