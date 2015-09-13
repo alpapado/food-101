@@ -96,17 +96,21 @@ right.classIndex = classes(bestSplitRight);
 
 end
 
-function infoGain = informationGain(data, dataLeft, dataRight)
-%informationGain Computes the information gain from partitioning data into
-%dataLeft and dataRight
+function infoGain = informationGain(X, L, R)
+%informationGain Computes the information gain from partitioning X into
+%   L and R
 %   The information gain is computed, using the 'shannon' formula for
 %   the entropy in a vector
-type = 'shannon';
 
-entropyLeft = numel(dataLeft) * wentropy(dataLeft, type) / numel(data);
-entropyRight = numel(dataRight) * wentropy(dataRight, type) / numel(data);
-initialEntropy = wentropy(data, type);
+entropyLeft = numel(L) * entropy(L) / numel(X);
+entropyRight = numel(R) * entropy(R) / numel(X);
+initialEntropy = entropy(X);
 infoGain = initialEntropy - entropyLeft - entropyRight;
 
+end
+
+function E = entropy(X)
+    probX = arrayfun(@(x)length(find(X==x)), unique(X)) / length(X);
+    E = -sum(probX .* log2(probX));
 end
 

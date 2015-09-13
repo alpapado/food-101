@@ -1,5 +1,5 @@
-function [ trees ] = growRandomForest(numTrees, n)
-%growRandomForest Grows a random forest
+function trees = randomForest(numTrees, n)
+%randomForest Grows a random forest
 %   numTrees : Number of trees in forest
 %   n : Number of training data for a tree
 trees(numTrees) = struct('tree', [], 'leaves', []);
@@ -20,7 +20,7 @@ for i = 1:numTrees
     clear trSet
     
     % Classify validation set using previously trained tree
-    % TODO: Maybe move cross validating somewhere else because of its heavy
+    % TODO: Maybe move cross validation somewhere else because of its heavy
     % memory requirements
     load('validationSet');
     rTree = treeClassify(rTree, validationSet);

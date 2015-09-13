@@ -1,5 +1,5 @@
-function [ randomTree ] = growRandomTree(randomTree, parentId, trainingSet )
-%growRandomTree Grows a random binary tree on the given training set.
+function randomTree = randomTree(randomTree, parentId, trainingSet )
+%randomTree Grows a random binary tree on the given training set.
 % 
 % Grows a binary tree with the following procedure:
 % On each node, a number of linear SVMs is generated on random binary
@@ -55,12 +55,12 @@ rightNode = struct(field1, right, field2, [], field3, []);
 % If not split each new node in 2
 stopLeft = stopGrowing(trainingSet, left.trainingIndex, randomTree, newNodeLeftId);
 if stopLeft ~= true
-    randomTree = growRandomTree(randomTree, newNodeLeftId, trainingSet);
+    randomTree = randomTree(randomTree, newNodeLeftId, trainingSet);
 end
 
 stopRight = stopGrowing(trainingSet, right.trainingIndex, randomTree, newNodeRightId);
 if  stopRight ~= true
-    randomTree = growRandomTree(randomTree, newNodeRightId, trainingSet);
+    randomTree = randomTree(randomTree, newNodeRightId, trainingSet);
 end
 
 

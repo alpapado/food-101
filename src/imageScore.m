@@ -1,4 +1,4 @@
-function scores = imageScore(models, features )
+function scores = imageScore(models, features)
 %imageClassify Returns the score matrix for every superpixel in the
 %image
 %   Each superpixel in the image is scored using the previously trained
