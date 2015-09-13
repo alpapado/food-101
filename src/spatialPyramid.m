@@ -1,7 +1,14 @@
 function grid = spatialPyramid(levels, image, segments, validSegments)
-%spatialPyramid Summary of this function goes here
-%   Detailed explanation goes here
-% [width, height, channels] = size(image);
+%spatialPyramid Implements a spatial pyramid scheme
+%   Returns an object that contains the points that
+%   constitute the rectangles of the grid at the various levels of
+%   resolution, as specified by levels.
+%   A spatial pyramid is a collection of orderless feature histograms 
+%   computed over cells defined by a multi-level recursive image 
+%   decomposition. At level 0, the decomposition consists of just a single 
+%   cell, and the representation is equivalent to a standard BoF. 
+%   At level 1, the image is subdivided into four quadrants, yielding four 
+%   feature histograms, and so on.
 
 [width, height, ~] = size(image);
 level  = spatialPyramidGrid(width, height, levels);
@@ -24,7 +31,6 @@ for l = 1:levels
         temp = unique(segments(min(xv):max(xv), min(yv):max(yv)));
         
         % Reject segments that were too small to be encoded
-%         validSegments
         indexOfInvalids = find(validSegments == 0);
         toKeep = ones(length(temp), 1);
         for t = 1:length(temp)
@@ -35,8 +41,6 @@ for l = 1:levels
         temp(logical(toKeep));
         grid(i).spixelsToAverage = temp(logical(toKeep));  
         i = i + 1;
-
-        % Error fix it
     end
 end
 

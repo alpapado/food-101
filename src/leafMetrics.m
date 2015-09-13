@@ -1,5 +1,5 @@
-function metrics = computeLeafMetrics( leaves, params )
-%computeLeafMetrics Computes all the leaf metrics 
+function metrics = leafMetrics( leaves, params )
+%leafMetrics Computes all the leaf metrics 
 %   The function computes the leaf metrics, classDistribution,
 %   classConfidence, delta and distinctiveness for set of leaves as defined
 %   by the first input for forest parameters given by the second input.
