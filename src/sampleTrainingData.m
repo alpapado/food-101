@@ -1,15 +1,12 @@
-function [ shuffledTrainingData ] = sampleTrainingData(n, minStep, maxStep)
+function [ allFeatures, allClasses ] = sampleTrainingData(n)
 %sampleTrainingData Samples n random superpixels to be used for training
 %set in the growth of a tree.
 %   Samples n random entries from the data structure that contains the
 %   entire dataset's superpixels in fisher encoding
-field1 = 'features'; value1 = zeros(8576, 1);
-field2 = 'classLabel'; value2 = '';
-field3 = 'classIndex'; value3 = 0;
-field4 = 'image'; value4 = '';
 
 % Preallocate space for result
-trainingData(n) = struct(field1, value1, field2, value2, field3, value3, field4, value4);
+allFeatures = single(zeros(n, 8576));
+allClasses = uint8(zeros(n, 1));
 
 % Generate random seed
 [~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
@@ -25,41 +22,65 @@ fid = fopen(classFile);
 classes = textscan(fid, '%s', 'Delimiter', '\n');
 classes = classes{1};
 
-sampled = 0;
+[s, w] = unix('find data -name "*mat"');
+list = strsplit(w, '\n'); % list of image encodings
+list(end) = []; % last is empty
 
-while sampled < n
-    % Load random class encoded file
+parfor i = 1:n
     try
-        randomClass = classes(randi([1 length(classes)], 1));
-        load(['done/' num2str(cell2mat(randomClass))]); % Loads encoded data for class in a variable called encoded
-    catch
-        continue;
+        %fprintf('%d / %d', i, n);
+        ind = randi([1 length(list)], 1);
+        randImgEnc = num2str(cell2mat(list(ind)));
+
+        temp = load(randImgEnc, 'features');
+        split = strsplit(randImgEnc, '/');
+        classLabel = split(3);
+        c = find(ismember(classes, classLabel));
+
+        randSp = randi([1 size(temp.features, 1)], 1);
+        allFeatures(i,:) = temp.features(randSp, :);
+        allClasses(i) = c;  
+    catch ME
+        fprintf('img = %s\n', randImgEnc);
+        disp(getReport(ME,'extended'));
     end
+end
+
+% while sampled < n
+    % Load random class encoded file
     
-    % Sample random number of superpixels
-    numSamples = randi([minStep maxStep], 1);
+    
+%     try
+%         randomClass = classes(randi([1 length(classes)], 1));
+%         load(['done/' num2str(cell2mat(randomClass))]); % Loads encoded data for class in a variable called encoded
+%     catch
+%         continue;
+%     end
+%     
+%     % Sample random number of superpixels
+%     numSamples = randi([minStep maxStep], 1);
     
     % Trim number of new samples, so that no more than n superpixels will
     % be sampled in total
-    if sampled + numSamples > n
-        numSamples = n - sampled;
-    end
+%     if sampled + numSamples > n
+%         numSamples = n - sampled;
+%     end
     
     % Create numSamples random indexes
-    randomIndexes = randi([1 length(encoded)], numSamples, 1); 
-    trainingData(sampled+1:sampled+numSamples) = encoded(randomIndexes);
+%     randomIndexes = randi([1 length(encoded)], numSamples, 1); 
+%     trainingData(sampled+1:sampled+numSamples) = encoded(randomIndexes);
     
     % Update counter
-    sampled = sampled + numSamples;
-    fprintf('Sampled %d/%d\n', sampled, n);
+%     sampled = sampled + numSamples;
+%     fprintf('Sampled %d/%d\n', sampled, n);
     
     % Unload from memory
-    clear encoded
-end
+%     clear encoded
+% end
 
 % Randomly shuffle sampled data
-permutation = randperm(length(trainingData));
-shuffledTrainingData = trainingData(permutation);
+% permutation = randperm(length(trainingData));
+% shuffledTrainingData = trainingData(permutation);
 
 end
 

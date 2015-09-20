@@ -7,7 +7,6 @@ fid = fopen('error.txt', 'a');
 spIndices = unique(segments); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
 features = zeros(numSuperpixels, 8576);
-% validSegments = ones(numSuperpixels, 1);
 
 % Get image dimensions
 % Height is first ;( ;( ;(
@@ -21,7 +20,7 @@ else
 end
 
 % Create grid on which the SURFs will be calculated
-gridStep = 6;
+gridStep = 5;
 gridX = 1:gridStep:width;
 gridY = 1:gridStep:height;
 [x ,y] = meshgrid(gridX, gridY);
@@ -51,9 +50,8 @@ for i = 1:numSuperpixels
     points(points == 0) = [];
 
     modes = 64;
-    if length(points) > modes
-        temp = allSurfs(points, :);
-        surfs = temp; %sign(temp) ./ sqrt(abs(temp));
+    if length(points) >= modes
+        surfs = allSurfs(points, :); 
 
         poi = uint8(zeros(length(points), 3)); % Image region whose lab values to compute
         for j = 1:length(points)
@@ -69,11 +67,12 @@ for i = 1:numSuperpixels
 %         J = step(markerInserter, label2rgb(segments==s), int32(validPointsLocation(points,:)));
 %         imshow(J);
 %         pause
-        fprintf(fid, 'Image %s\n', imname);
-        fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(segments==s)));
-        fprintf(fid,'Superpixel %d has %d valid points \n', s, length(points));
-        fprintf(fid,'Too few valid points for superpixel %d\n', s);
-%         validSegments(s) = 0;
+%        fid = fopen('error.txt', 'a');
+%        fprintf(fid, 'Image %s\n', imname);
+%        fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(segments==s)));
+%        fprintf(fid,'Superpixel %d has %d valid points \n', s, length(points));
+%        fprintf(fid,'Too few valid points for superpixel %d\n', s);
+%        fclose(fid);
         continue;
     end
 end

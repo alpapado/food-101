@@ -7,18 +7,16 @@ function total = segmentDataset(datasetPath, classes)
 % OUTPUTS:
 % total: Total number of superpixels in dataset
 
-numClasses = size(classes, 1);
 targetPath = 'data/encoded';
-% mkdir(targetPath); 
+mkdir(targetPath); 
 total = 0;
 
-for c = 1:numClasses
+parfor c = 1:length(classes)
     currentClass = num2str(cell2mat(classes(c)));
-    fprintf('Current class = %s \n', currentClass);
     imageFolder = [datasetPath '/' currentClass];
     classImages = dir([imageFolder '/*jpg']);
     classTarget = [targetPath '/' currentClass];
-%     mkdir(classTarget);
+    mkdir(classTarget);
 
     for i = 1:size(classImages, 1)
         fprintf('Segment and encode %s %d/%d\n', currentClass, i, size(classImages,1));  
@@ -31,7 +29,7 @@ for c = 1:numClasses
             segments = segmentImage(image);
             features = extractImageFeatures(image, segments, pathToImage);
             total = total + size(features, 1);
-%             parSave(saveLocation, segments, single(features));          
+            parSave(saveLocation, segments, single(features));          
         catch ME          
             disp(getReport(ME,'extended'));       
         end
