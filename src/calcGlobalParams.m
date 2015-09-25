@@ -40,11 +40,6 @@ parfor i = 1:length(ind)
     labs = zeros(numGridPoints, 3);
     
     for j = 1:numGridPoints
-%         size(imlab)
-%         gridLocations(j,1)
-%         gridLocations(j,2)
-%         max(gridX)
-%         max(gridY)
         labs(j,:) = imlab(gridLocations(j,2), gridLocations(j,1), :);
     end
     
@@ -61,12 +56,16 @@ size(allSurfs)
 size(allLabs)
 modes = 64;
 
+% Order of calculations:
+% 0) SURFs are transformed using signed square rooting
+% 1) PCA is computed 
+% 2) Data is projected to pca space
+% 3) Projected data is whitened using pca whitening
+% 4) GMMs are computed on data from 3)
 
 % Compute pca for surfs
 fprintf('Computing pca for surfs\n');
 tic;
-% avg = mean(allSurfs, 1);
-% allSurfs = allSurfs - repmat(avg, size(allSurfs, 1), 1);
 [U, S, avg] = pca(allSurfs);
 toc;
 surfPca.avg = avg;
@@ -76,8 +75,6 @@ surfPca.S = S;
 % Compute pca for labs
 fprintf('Computing pca for labs\n');
 tic;
-% avg = mean(allLabs, 1);
-% allLabs = allLabs - repmat(avg, size(allLabs, 1), 1);
 [U, S, avg] = pca(allLabs);
 toc;
 labPca.avg = avg;
