@@ -1,4 +1,4 @@
-function features = extractImageFeatures(image, segments, imname)
+function features = extractImageFeatures(image, segments, params)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
 fid = fopen('error.txt', 'a');
@@ -51,51 +51,40 @@ for i = 1:numSuperpixels
 
     modes = 64;
     if length(points) >= modes
-        surfs = allSurfs(points, :); 
-
+        
+        % Order of calculations:
+        % 0) SURFs are transformed using signed square rooting
+        % 1) Data is pca whitened
+        % 2) PCA whitened data is ifv encoded
+        
+        % Step 0
+        SURFs = ssrt(allSurfs(points, :)); 
+        
         poi = uint8(zeros(length(points), 3)); % Image region whose lab values to compute
         for j = 1:length(points)
             poi(j,:) = image(validPointsLocation(points(j), 2), validPointsLocation(points(j), 1), :);
         end
-        labValues = rgb2lab(poi);
-        surfsEncoding = ivfEncode(surfs, modes);
-        labEncoding = ivfEncode(labValues, modes);
-        % Apply pca whitening - ok but when?
+        LABs = rgb2lab(poi);
+        
+        % Step 1 and 2
+        surfsEncoding = ifvEncode(pcaw(SURFs, params.surfPca), params.surfGmm);
+        labEncoding = ifvEncode(pcaw(LABs, params.labPca), params.labGmm);
+
         features(i, :) = [surfsEncoding; labEncoding];
     else
 %         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
 %         J = step(markerInserter, label2rgb(segments==s), int32(validPointsLocation(points,:)));
 %         imshow(J);
 %         pause
-%        fid = fopen('error.txt', 'a');
-%        fprintf(fid, 'Image %s\n', imname);
-%        fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(segments==s)));
-%        fprintf(fid,'Superpixel %d has %d valid points \n', s, length(points));
-%        fprintf(fid,'Too few valid points for superpixel %d\n', s);
-%        fclose(fid);
+       fid = fopen('error.txt', 'a');
+       fprintf(fid, 'Image %s\n', imname);
+       fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(segments==s)));
+       fprintf(fid,'Superpixel %d has %d valid points \n', s, length(points));
+       fprintf(fid,'Too few valid points for superpixel %d\n', s);
+       fclose(fid);
         continue;
     end
 end
-
-end
-
-
-function Xw = pcaw(X)
-%pcaw Performs pca whitening on the input data X
-%   PCA whitening is a preprocessing techique that causes the different
-%   components in the input data X, to become uncorrelated and to have unit
-%   variance.
-
-% Perform pca - uncorrelate the features
-% coeff: Principal component directions
-% score: X transformed in the principal component space
-% latent: Diagonal values of the covariance matrix of score.
-% (non diagonal values of said matrix are zero)
-
-[~, score, latent] = pca(X, 'Centered', true);
-
-% Whiten the data - make each feature have unit variance
-Xw = score ./ transpose(repmat(sqrt(latent), [1 size(X, 1)])); % Whitening
 
 end
 

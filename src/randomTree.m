@@ -1,4 +1,4 @@
-function randomTree = randomTree(randomTree, parentId, trainingSet )
+function rtree = randomTree(rtree, parentId, trset )
 %randomTree Grows a random binary tree on the given training set.
 % 
 % Grows a binary tree with the following procedure:
@@ -17,12 +17,12 @@ function randomTree = randomTree(randomTree, parentId, trainingSet )
 %node is a leaf of the tree, svm is empty.
 
 % The function accepts the following inputs:
-% randomTree: Variable of type 'tree', that holds the growing tree and that
+% rtree: Variable of type 'tree', that holds the growing tree and that
 %is updated as the tree growing process continues.
 % parentId: Variable that shows which node of the tree is the caller of the
-%function. ('growRandomTree' is a recursive function so this is an
+%function. ('randomTree' is a recursive function so this is an
 %auxilliary variable)
-% trainingSet: A reference to the entire training set that is used for
+% trset: A reference to the entire training set that is used for
 %growing the tree. Since it is not changed inside this function no copy of
 %it is created and no memory issue arises.
 
@@ -31,20 +31,20 @@ function randomTree = randomTree(randomTree, parentId, trainingSet )
 field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
 
 % Calculate the splits
-parent = randomTree.get(parentId);
-[left, right, svm] = nodeSplit(trainingSet, extractfield(parent.trData, 'trainingIndex'));
+parent = rtree.get(parentId);
+[left, right, svm] = nodeSplit(trset, extractfield(parent.trData, 'trainingIndex'));
 
 % Set parents svm
 parent.svm = svm;
-randomTree = randomTree.set(parentId, parent);
+rtree = rtree.set(parentId, parent);
 
 % Set left node
 leftNode = struct(field1, left, field2, [], field3, []);
-[randomTree, newNodeLeftId] = randomTree.addnode(parentId, leftNode);
+[rtree, newNodeLeftId] = rtree.addnode(parentId, leftNode);
 
 % Set right node
 rightNode = struct(field1, right, field2, [], field3, []);
-[randomTree, newNodeRightId] = randomTree.addnode(parentId, rightNode);
+[rtree, newNodeRightId] = rtree.addnode(parentId, rightNode);
 
 % FOR DEBUGGING PURPOSES
 % fprintf('parent: %s\n', num2str(length(parent.trData.classIndex)));
@@ -53,20 +53,20 @@ rightNode = struct(field1, right, field2, [], field3, []);
 
 % Has the termination criterion been met?
 % If not split each new node in 2
-stopLeft = stopGrowing(trainingSet, left.trainingIndex, randomTree, newNodeLeftId);
+stopLeft = stopGrowing(trset, left.trainingIndex, rtree, newNodeLeftId);
 if stopLeft ~= true
-    randomTree = randomTree(randomTree, newNodeLeftId, trainingSet);
+    rtree = randomTree(rtree, newNodeLeftId, trset);
 end
 
-stopRight = stopGrowing(trainingSet, right.trainingIndex, randomTree, newNodeRightId);
+stopRight = stopGrowing(trset, right.trainingIndex, rtree, newNodeRightId);
 if  stopRight ~= true
-    randomTree = randomTree(randomTree, newNodeRightId, trainingSet);
+    rtree = randomTree(rtree, newNodeRightId, trset);
 end
 
 
 end
 
-function stop = stopGrowing(trainingSet, trainingSetIndexes, tree, nodeId)
+function stop = stopGrowing(trset, trsetInd, tree, nodeId)
 %stopGrowing Checks the termination conditions for stopping the random tree
 %growth
 %   Termination conditions:
@@ -80,14 +80,14 @@ maxDepth = 7;
 minSamples = 25;
 
 % Check condition #1
-numData = size(trainingSetIndexes, 2);
+numData = size(trsetInd, 2);
 if numData < minSamples
     fprintf('Too few samples left\n');
     stop = true;
 end
 
 % Check condition #2
-classes = extractfield(trainingSet(trainingSetIndexes), 'classIndex');
+classes = trset.classIndex(trsetInd);
 if numel(unique(classes)) == 1
     fprintf('Single class samples left\n');
     stop = true;

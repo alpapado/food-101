@@ -1,12 +1,12 @@
-function [left, right, svm] = nodeSplit(trainingSet, trainingSetIndexes)
+function [left, right, svm] = nodeSplit(trset, trsetInd)
 %nodeSplit Splits the input data in two parts
 %   Generates n binary SVMs as decision functions on random binary partitions
 %   of the class labels in data. Keeps the one that maximizes the
 %   information gain criterion.
-% trainingSet: The total training set on which the tree is being grown. 
+% trset: The total training set on which the tree is being grown. 
 % Note that since it is not changed inside the function body, no copy is created.
 % That is useful for saving memory space
-% trainingSetIndexes: Indexes of the total training set that define the input data for
+% trsetInd: Indexes of the total training set that define the input data for
 % the current tree node
 left = struct('trainingIndex', [], 'classIndex', []);
 right = struct('trainingIndex', [], 'classIndex', []);
@@ -15,11 +15,11 @@ right = struct('trainingIndex', [], 'classIndex', []);
 numSVMs = 100;
 
 % Set SVM parameters
-numData = length(trainingSetIndexes);
+numData = length(trsetInd);
 numTrainingData = min(10*10^3, floor(0.6 * numData)); 
-classes = extractfield(trainingSet, 'classIndex');
+classes = trset.classIndex;
 
-X = transpose(reshape(extractfield(trainingSet(trainingSetIndexes), 'features'), [8576, numData]));
+X = trset.features(trsetInd, :);
 
 % Remember to clear unwanted variables
 
@@ -45,7 +45,7 @@ for i = 1:numSVMs
     try
         % Train the SVM and discard training data
 %        fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
-        model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 2 -n 8 -q');
+        model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 3 -q');
       
 %       fprintf('Classifying %d instances...\n', numData-numTrainingData);
         
@@ -69,12 +69,12 @@ for i = 1:numSVMs
     end
 
     % Calculate information gain
-    leftIndexes = trainingSetIndexes(split == 0);
-    rightIndexes = trainingSetIndexes(split == 1);
+    leftIndexes = trsetInd(split == 0);
+    rightIndexes = trsetInd(split == 1);
     leftClasses = classes(leftIndexes);
     rightClasses = classes(rightIndexes);
     
-    threadStruct(i).infoGain = informationGain(classes(trainingSetIndexes), leftClasses, rightClasses);
+    threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
     threadStruct(i).leftSplit = leftIndexes;
     threadStruct(i).rightSplit = rightIndexes;
     threadStruct(i).svm = model;
@@ -98,9 +98,7 @@ end
 
 function infoGain = informationGain(X, L, R)
 %informationGain Computes the information gain from partitioning X into
-%   L and R
-%   The information gain is computed, using the 'shannon' formula for
-%   the entropy in a vector
+% L and R
 
 entropyLeft = numel(L) * entropy(L) / numel(X);
 entropyRight = numel(R) * entropy(R) / numel(X);

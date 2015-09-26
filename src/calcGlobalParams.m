@@ -1,4 +1,4 @@
-function [surfGmm, labGmm, surfPca, labPca] = calcGlobalParams()
+function params = calcGlobalParams()
 %calcGlobalParams Calculate a gmm and a pca representation of the data
 %   Detailed explanation goes here
 [~, w] = unix('find data/images -name "*jpg"');
@@ -63,6 +63,10 @@ modes = 64;
 % 3) Projected data is whitened using pca whitening
 % 4) GMMs are computed on data from 3)
 
+% Step 0
+allSurfs = ssrt(allSurfs);
+
+% Step 1
 % Compute pca for surfs
 fprintf('Computing pca for surfs\n');
 tic;
@@ -81,9 +85,13 @@ labPca.avg = avg;
 labPca.U = U;
 labPca.S = S;
 
+% Step 2 and 3
+allSurfs = pcaw(allSurfs, surfPca);
+allLabs = pcaw(allLabs, labPca);
+
+% Step 4
 % Fit gmm to surfs
 fprintf('Fitting gmm to surfs\n');
-allSurfs = pcaw(allSurfs, surfPca);
 tic;[means, covariances, priors] = vl_gmm(allSurfs', modes);toc;
 surfGmm.means = means;
 surfGmm.covariances = covariances;
@@ -92,12 +100,13 @@ clear allSurfs;
 
 % Fit gmm to labs
 fprintf('Fitting gmm to labs\n');
-allLabs = pcaw(allLabs, labPca);
 tic;[means, covariances, priors] = vl_gmm(allLabs', modes);toc;
 labGmm.means = means;
 labGmm.covariances = covariances;
 labGmm.priors = priors;
 clear allLabs;
+
+params = struct('labGmm', labGmm, 'labPca', labPca, 'surfGmm', surfGmm, 'surfPca', surfPca);
 
 end
 

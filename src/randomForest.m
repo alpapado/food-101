@@ -3,40 +3,39 @@ function trees = randomForest(numTrees, n)
 %   numTrees : Number of trees in forest
 %   n : Number of training data for a tree
 trees(numTrees) = struct('tree', [], 'leaves', []);
+m = matfile('data.mat');
+
+[vset, vind] = sampleValidationSet(m, n); 
 
 for i = 1:numTrees
     fprintf('Tree %d\n', i);
     
     % Load training set
-    mfile = matfile(['tree' num2str(i) '.mat']);
-    trSet = mfile.trainingSet(1, 1:n);
-          
+    trset = sampleTrainingData(m, n, vind);
+    
+    
     % Train tree
     % Root node contains the entire training set
-    rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trSet, 'classIndex'));
+    rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trset, 'classIndex'));
     root = struct('trData', rootTrData, 'cvData', [], 'svm', []); % Set root node
-    rTree = tree(root);
-    rTree = growRandomTree(rTree, 1, trSet); % Grow starting from 2nd node
+    rtree = tree(root);
+    rtree = randomTree(rtree, 1, trset); % Grow starting from 2nd node
     clear trSet
     
     % Classify validation set using previously trained tree
-    % TODO: Maybe move cross validation somewhere else because of its heavy
-    % memory requirements
-    load('validationSet');
-    rTree = treeClassify(rTree, validationSet);
-    clear validationSet
+    rtree = treeClassify(rtree, vset);
     
     % Extract leaves
-    leafIndices = rTree.findleaves();
+    leafIndices = rtree.findleaves();
     leaves = struct('trData', [], 'cvData', []);
     
     for l = 1:length(leafIndices)
-        leaf = rTree.get(leafIndices(l));
+        leaf = rtree.get(leafIndices(l));
         leaves(l).trData = leaf.trData;
         leaves(l).cvData = leaf.cvData;
     end
     
-    trees(i).tree = rTree;
+    trees(i).tree = rtree;
     trees(i).leaves = leaves;
     
 end

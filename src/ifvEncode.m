@@ -1,13 +1,13 @@
-function [ encoding ] = ifvEncode( data, gmm )
-%ifvEncode Performs Imprvode Fisher Vector encoding on the given data
+function [ encoding ] = ifvEncode( data, params )
+%ivfEncode Performs Improved Fisher Vector encoding on the given data
+
+means = params.means;
+covariances = params.covariances;
+priors = params.priors;
 
 % Perform the fisher encoding
-% Spcifying the improved option, is equivalent to specifying the
+% Spcifying the improved option, is equivalent to to specifying the
 % normalized and square root options.
-means = gmm.means;
-covariances = gmm.covariances;
-priors = gmm.priors;
-
 encoding = vl_fisher(data', means, covariances, priors, 'Improved', 'Fast');
 
 end
