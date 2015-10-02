@@ -44,11 +44,11 @@ for i = 1:numSVMs
      
     try
         % Train the SVM and discard training data
-%        fprintf('Training svm %d on %d instances...\n', i, numTrainingData);
-        model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 3 -q');
+        fprintf('Training svm %d on %d instances...', i, numTrainingData);
+        tic;model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 3 -q');toc;
       
-%       fprintf('Classifying %d instances...\n', numData-numTrainingData);
-        
+        fprintf('Classifying %d instances...', numData-numTrainingData);
+        tic;
         % Classify the rest of the data by spliting them in blocks for
         % memory efficiency
         numChunks = 8;
@@ -62,7 +62,7 @@ for i = 1:numSVMs
             result = predict(zeros(length(startIndex:endIndex), 1), sparse(double(X(startIndex:endIndex, :))), model, '-q');
             split(startIndex:endIndex) = result;
         end      
-
+        toc;
     catch ME
         disp(ME);
         continue;

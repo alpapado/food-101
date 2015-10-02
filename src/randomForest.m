@@ -5,7 +5,9 @@ function trees = randomForest(numTrees, n)
 trees(numTrees) = struct('tree', [], 'leaves', []);
 m = matfile('data.mat');
 
-[vset, vind] = sampleValidationSet(m, n); 
+% [vset, vind] = sampleValidationSet(m, n); 
+% save('vset.mat', 'vset', 'vind');
+load('vset.mat', 'vind');
 
 for i = 1:numTrees
     fprintf('Tree %d\n', i);
@@ -22,7 +24,9 @@ for i = 1:numTrees
     clear trSet
     
     % Classify validation set using previously trained tree
+    load('vset.mat', 'vset');
     rtree = treeClassify(rtree, vset);
+    clear vset;
     
     % Extract leaves
     leafIndices = rtree.findleaves();

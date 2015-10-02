@@ -26,6 +26,7 @@ function rtree = randomTree(rtree, parentId, trset )
 %growing the tree. Since it is not changed inside this function no copy of
 %it is created and no memory issue arises.
 
+fprintf('Node %d\n', parentId);
 
 % Node fields
 field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';

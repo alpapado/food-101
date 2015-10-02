@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <omp.h>
 #include <stdlib.h>
 #include <string.h>
 #include "linear.h"
