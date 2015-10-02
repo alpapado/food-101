@@ -13,7 +13,6 @@ for i = 1:numTrees
     % Load training set
     trset = sampleTrainingData(m, n, vind);
     
-    
     % Train tree
     % Root node contains the entire training set
     rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trset, 'classIndex'));

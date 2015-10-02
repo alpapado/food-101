@@ -15,6 +15,7 @@ parfor i = 1:length(vind)
    classIndex(i) = m.classIndex(i,1);
 end
 
+% delete(gcp);
 vset = struct('features', features, 'classIndex', classIndex);
 fprintf(' done\n\n');
 

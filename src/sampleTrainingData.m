@@ -6,7 +6,7 @@ function trset = sampleTrainingData(m, n, v)
 
 % Preallocate space for result
 features = single(zeros(n, 8576));
-labels = uint8(zeros(n, 1));
+classIndex = uint8(zeros(n, 1));
 
 % Generate random seed
 [~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
@@ -19,16 +19,16 @@ rng(seed);
 info = whos(m, 'classIndex');
 
 fprintf('Generating training set...');
-for i = 1:n
+parfor i = 1:n
     randInd = randi([1 info.size(1)], 1, 1);
     while ismember(randInd, v)
         randInd = randi([1 info.size(1)], 1, 1);
     end
     
     features(i,:) = m.features(randInd, :);
-    labels(i) = m.classIndex(randInd, 1);
+    classIndex(i) = m.classIndex(randInd, 1);
 end
-
+delete(gcp);
 trset = struct('features', features, 'classIndex', classIndex);
 
 fprintf(' done\n');
