@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "linear.h"
-
 #include "mex.h"
 #include "linear_model_matlab.h"
 
@@ -64,7 +63,6 @@ void do_predict(int nlhs, mxArray *plhs[], const mxArray *prhs[], struct model *
 	int instance_index;
 	double *ptr_label, *ptr_predict_label;
 	double *ptr_prob_estimates, *ptr_dec_values, *ptr;
-	struct feature_node *x;
 	mxArray *pplhs[1]; // instance sparse matrix in row format
 	mxArray *tplhs[3]; // temporary storage for plhs[]
 
@@ -136,38 +134,38 @@ void do_predict(int nlhs, mxArray *plhs[], const mxArray *prhs[], struct model *
 	ptr_predict_label = mxGetPr(tplhs[0]);
 	ptr_prob_estimates = mxGetPr(tplhs[2]);
 	ptr_dec_values = mxGetPr(tplhs[2]);
-	x = Malloc(struct feature_node, feature_number+2);
-        #pragma omp parallel for
+
+        int tid;
+        int* s = Malloc(int, 8);
+
+        for (int i = 0; i < 8; i++)
+          s[i] = 0;
+        
+        #pragma omp parallel for num_threads(8) private(instance_index) shared(ptr_label, model_) reduction(+:total,correct,error,sump,sumt,sumpp,sumtt,sumpt)
 	for(instance_index=0;instance_index<testing_instance_number;instance_index++)
 	{
+        	struct feature_node *x;
+	        x = Malloc(struct feature_node, feature_number+2);
+
 		int i;
+                tid = omp_get_thread_num();
+
+                s[tid]++;
 		double target_label, predict_label;
 
 		target_label = ptr_label[instance_index];
 
 		// prhs[1] and prhs[1]^T are sparse
-		read_sparse_instance(pplhs[0], instance_index, x, feature_number, model_->bias);
+                read_sparse_instance(pplhs[0], instance_index, x, feature_number, model_->bias);
 
-		if(predict_probability_flag)
-		{
-			predict_label = predict_probability(model_, x, prob_estimates);
-			ptr_predict_label[instance_index] = predict_label;
-			for(i=0;i<nr_class;i++)
-				ptr_prob_estimates[instance_index + i * testing_instance_number] = prob_estimates[i];
-		}
-		else
-		{
-			double *dec_values = Malloc(double, nr_class);
-			predict_label = predict_values(model_, x, dec_values);
-			ptr_predict_label[instance_index] = predict_label;
+                double *dec_values = Malloc(double, nr_class);
 
-			for(i=0;i<nr_w;i++)
-				ptr_dec_values[instance_index + i * testing_instance_number] = dec_values[i];
-			free(dec_values);
-		}
+                predict_label = predict_values(model_, x, dec_values);
+                ptr_predict_label[instance_index] = predict_label;
 
-		if(predict_label == target_label)
-			++correct;
+		if(predict_label == target_label){
+			correct += 1;
+                }
 		error += (predict_label-target_label)*(predict_label-target_label);
 		sump += predict_label;
 		sumt += target_label;
@@ -175,8 +173,13 @@ void do_predict(int nlhs, mxArray *plhs[], const mxArray *prhs[], struct model *
 		sumtt += target_label*target_label;
 		sumpt += predict_label*target_label;
 
-		++total;
+		total += 1;
+
+//	        free(x);
 	}
+
+        for (int i = 0; i < 8; i++)
+          info("s[%d] = %d\n", i, s[i]);
 
 	if(check_regression_model(model_))
 	{
@@ -197,7 +200,6 @@ void do_predict(int nlhs, mxArray *plhs[], const mxArray *prhs[], struct model *
 	ptr[2] = ((total*sumpt-sump*sumt)*(total*sumpt-sump*sumt))/
 				((total*sumpp-sump*sump)*(total*sumtt-sumt*sumt));
 
-	free(x);
 	if(prob_estimates != NULL)
 		free(prob_estimates);
 

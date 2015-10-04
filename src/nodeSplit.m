@@ -45,24 +45,19 @@ for i = 1:numSVMs
     try
         % Train the SVM and discard training data
         fprintf('Training svm %d on %d instances...', i, numTrainingData);
-        tic;model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 3 -q');toc;
-      
-        fprintf('Classifying %d instances...', numData-numTrainingData);
-        tic;
-        % Classify the rest of the data by spliting them in blocks for
-        % memory efficiency
-        numChunks = 8;
-        chunkSize = ceil((numData - numTrainingData) / numChunks);
-
+        tstart = tic;
+        model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 3 -q');
+        telapsed = toc(tstart);
+        fprintf('Elapsed time is %f\n', telapsed);
+        
+        fprintf('Classifying %d instances with custom svm predict...', numData-numTrainingData);
+        tstart = tic;
         split = zeros(numData, 1);
-        split(1:length(y)) = y;     
-        for j = 1:numChunks
-            startIndex = numTrainingData + 1 + (j-1) * chunkSize;
-            endIndex = min(startIndex + chunkSize - 1, numData);
-            result = predict(zeros(length(startIndex:endIndex), 1), sparse(double(X(startIndex:endIndex, :))), model, '-q');
-            split(startIndex:endIndex) = result;
-        end      
-        toc;
+        split(1:length(y)) = y;
+        split(length(y)+1:end) = svmPredict(model, X(numTrainingData+1:end, :));
+        telapsed = toc(tstart);
+        fprintf('Elapsed time is %f\n', telapsed);
+        
     catch ME
         disp(ME);
         continue;

@@ -13,7 +13,9 @@ for i = 1:numTrees
     fprintf('Tree %d\n', i);
     
     % Load training set
-    trset = sampleTrainingData(m, n, vind);
+%     trset = sampleTrainingData(m, n, vind);
+    load('trset.mat');
+    trset = struct('features', features, 'classIndex', classIndex);
     
     % Train tree
     % Root node contains the entire training set
@@ -25,6 +27,7 @@ for i = 1:numTrees
     
     % Classify validation set using previously trained tree
     load('vset.mat', 'vset');
+    fprintf('Classifing validation set using tree\n');
     rtree = treeClassify(rtree, vset);
     clear vset;
     
