@@ -21,21 +21,10 @@ for n = iterator
     model = node.svm;
         
     cvDataIndices = extractfield(node.cvData, 'validationIndex');
-    numData = length(cvDataIndices);
     X = vset.features(cvDataIndices, :);
     
-    % Classify the rest of the data by spliting them in blocks for memory efficiency
-    numChunks = 10;
-    chunkSize = ceil(numData / numChunks);
-    split = zeros(numData, 1);
-   
-    for j = 1:numChunks
-        startIndex = 1 + (j-1) * chunkSize;
-        endIndex = min(startIndex + chunkSize - 1, numData);
-        result = predict(zeros(length(startIndex:endIndex), 1), sparse(double(X(startIndex:endIndex, :))), model, '-q');
-        split(startIndex:endIndex) = result;
-    end
-    
+    % Classify 
+    split = svmPredict(model, X);
     cvLeft = cvDataIndices(split == 0);
     cvRight = cvDataIndices(split == 1);
     children = rTree.getchildren(n);
