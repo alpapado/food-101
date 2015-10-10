@@ -16,7 +16,6 @@ try
 		mex CFLAGS="\$CFLAGS -std=c99" -largeArrayDims libsvmwrite.c
 		mex CFLAGS="\$CFLAGS -std=c99 -fopenmp" CXXFLAGS="\$CXXFLAGS -fopenmp" -I.. -largeArrayDims -lgomp train.c linear_model_matlab.c ../linear.cpp ../tron.cpp ../blas/daxpy.c ../blas/ddot.c ../blas/dnrm2.c ../blas/dscal.c
 		mex CFLAGS="\$CFLAGS -std=c99" CXXFLAGS="\$CXXFLAGS -fopenmp" -I.. -largeArrayDims -lgomp predict.c linear_model_matlab.c ../linear.cpp ../tron.cpp ../blas/daxpy.c ../blas/ddot.c ../blas/dnrm2.c ../blas/dscal.c
-		mex CFLAGS="\$CFLAGS -std=c99 -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp" CXXFLAGS="\$CXXFLAGS -fopenmp" -I.. -largeArrayDims -lgomp omp_predict.c linear_model_matlab.c ../linear.cpp ../tron.cpp ../blas/daxpy.c ../blas/ddot.c ../blas/dnrm2.c ../blas/dscal.c
 		
 
 	end

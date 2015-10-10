@@ -2458,33 +2458,35 @@ model* train(const problem *prob, const parameter *param)
 			else
 			{
 				model_->w=Malloc(double, w_size*nr_class);
-				double *w=Malloc(double, w_size);
+				#pragma omp parallel for private(i) 
 				for(i=0;i<nr_class;i++)
 				{
+					problem sub_prob_omp;
+					sub_prob_omp.l = l;
+					sub_prob_omp.n = n;
+					sub_prob_omp.x = x;
+					sub_prob_omp.y = Malloc(double,l);
+
 					int si = start[i];
 					int ei = si+count[i];
 
-					k=0;
-					for(; k<si; k++)
-						sub_prob.y[k] = -1;
-					for(; k<ei; k++)
-						sub_prob.y[k] = +1;
-					for(; k<sub_prob.l; k++)
-						sub_prob.y[k] = -1;
+					double *w=Malloc(double, w_size);
 
-					if(param->init_sol != NULL)
-						for(j=0;j<w_size;j++)
-							w[j] = param->init_sol[j*nr_class+i];
-					else
-						for(j=0;j<w_size;j++)
-							w[j] = 0;
+					int t=0;
+					for(; t<si; t++)
+						sub_prob_omp.y[t] = -1;
+					for(; t<ei; t++)
+						sub_prob_omp.y[t] = +1;
+					for(; t<sub_prob_omp.l; t++)
+						sub_prob_omp.y[t] = -1;
 
-					train_one(&sub_prob, param, w, weighted_C[i], param->C);
+					train_one(&sub_prob_omp, param, w, weighted_C[i], param->C);
 
 					for(int j=0;j<w_size;j++)
 						model_->w[j*nr_class+i] = w[j];
+					free(sub_prob_omp.y);
+					free(w);
 				}
-				free(w);
 			}
 
 		}
@@ -3133,9 +3135,10 @@ const char *check_parameter(const problem *prob, const parameter *param)
 
 int check_probability_model(const struct model *model_)
 {
-	return (model_->param.solver_type==L2R_LR ||
-			model_->param.solver_type==L2R_LR_DUAL ||
-			model_->param.solver_type==L1R_LR);
+	return 1;
+	//~ return (model_->param.solver_type==L2R_LR ||
+			//~ model_->param.solver_type==L2R_LR_DUAL ||
+			//~ model_->param.solver_type==L1R_LR);
 }
 
 int check_regression_model(const struct model *model_)
