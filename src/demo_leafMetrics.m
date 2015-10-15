@@ -10,4 +10,4 @@ numTrees = length(trees);
 params = struct('numTrees', numTrees, 'numClasses', numClasses, 'numComponents', numComponents);
 metrics = leafMetrics( leaves, params );
 
-models = mineComponents( trees, vset, numComponents, numClasses );
+models = mineComponents( trees, vset, params); 

@@ -1,4 +1,4 @@
-function models = mineComponents(trees, validationSet, params)
+function models = mineComponents(trees, vset, params)
 %mineComponents Mine discriminative components using the forest leaves
 %   The process is as follows: First, the leaves are sorted based on their
 %   distinctiveness. Those that contain too much similar information are
@@ -15,6 +15,7 @@ models(numClasses, numComponents) = struct('svm', []);
 
 leaves = cell2mat(extractfield(trees, 'leaves'));
 [~, ~, ~, distinct] = load('metrics');
+% load('metrics');
 
 % For a single class y, evaluate how many discriminative samples are
 % located in each leaf by considering distinct(l,c)
@@ -35,12 +36,12 @@ for y = 1:numClasses
     topLeaves = prunedLeaves(1:numComponents);
     
     % Train models for each top leaf
-    models(y,:) = trainModels(topLeaves, y, validationSet);
+    models(y,:) = trainModels(topLeaves, y, vset);
 end
 
 end
 
-function models = trainModels(topLeaves, class, validationSet)
+function models = trainModels(topLeaves, class, vset)
 %trainModels For each leaf in the topLeaves list trains a SVM
 %   The samples belonging to the given class in each leaf are used as
 %   positive examples while a large repository of negative samples,
@@ -54,20 +55,19 @@ for i = 1:numModels
     leaf = topLeaves(i);
 
     leafClasses = extractfield(leaf.cvData, 'classIndex');
-    vsetIndexes = extractfield(leaf.cvData, 'validationIndex');
-    numData = length(vsetIndexes);
+    vind = extractfield(leaf.cvData, 'validationIndex');
     
     % Balance the training set
-    tempX = transpose(reshape(extractfield(validationSet(vsetIndexes), 'features'), [8576, numData]));
+    tempX = vset.features(vind, :);
     tempY = transpose(double(leafClasses == class));
  
     negatives = find(tempY==0);
     positives = find(tempY==1);
     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
-    
-%    negativesToKeep = negatives(1:length(positives)+50);
-%    tempY = tempY([positives; negativesToKeep]);
-%    tempX = tempX([positives; negativesToKeep], :);
+   
+    negativesToKeep = negatives(1:length(positives)+300);
+    tempY = tempY([positives; negativesToKeep]);
+    tempX = tempX([positives; negativesToKeep], :);
     
     permutation = randperm(length(tempY));
     X = tempX(permutation, :);
@@ -78,8 +78,8 @@ for i = 1:numModels
     model = train(y, sparse(double(X)), '-s 3 -q');
     models(i).svm = model;
 
-%     eval = evaluateModel(model, X, y);
-%     fprintf('F-measure = %s\n', num2str(eval(4)));
+     meval = evaluateModel(model, X, y);
+     fprintf('F-measure = %s\n\n', num2str(meval(4)));
     
     % TODO Hard negative mining
 end

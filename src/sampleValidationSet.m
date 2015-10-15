@@ -11,11 +11,11 @@ features = single(zeros(n, 8576));
 classIndex = uint8(zeros(n, 1));
 
 parfor i = 1:length(vind)
-   features(i,:) = m.features(i,:);
-   classIndex(i) = m.classIndex(i,1);
+   features(i,:) = m.features(vind(i),:);
+   classIndex(i) = m.classIndex(vind(i),1);
 end
 
-% delete(gcp);
+delete(gcp);
 vset = struct('features', features, 'classIndex', classIndex);
 fprintf(' done\n\n');
 
