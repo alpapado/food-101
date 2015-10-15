@@ -63,19 +63,19 @@ for i = 1:numModels
  
     negatives = find(tempY==0);
     positives = find(tempY==1);
-%     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
+    fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
     
-    negativesToKeep = negatives(1:length(positives)+50);
-    tempY = tempY([positives; negativesToKeep]);
-    tempX = tempX([positives; negativesToKeep], :);
+%    negativesToKeep = negatives(1:length(positives)+50);
+%    tempY = tempY([positives; negativesToKeep]);
+%    tempX = tempX([positives; negativesToKeep], :);
     
     permutation = randperm(length(tempY));
     X = tempX(permutation, :);
     y = tempY(permutation);
 
-%     fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
+    fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
     % Train model
-    model = train(y, sparse(double(X)), '-s 2 -n 8 -q');
+    model = train(y, sparse(double(X)), '-s 3 -q');
     models(i).svm = model;
 
 %     eval = evaluateModel(model, X, y);

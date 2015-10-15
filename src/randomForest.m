@@ -12,10 +12,8 @@ load('vset.mat', 'vind');
 for i = 1:numTrees
     fprintf('Tree %d\n', i);
     
-    % Load training set
-%     trset = sampleTrainingData(m, n, vind);
-    load('trset.mat');
-    trset = struct('features', features, 'classIndex', classIndex);
+    % Sample training set
+    trset = sampleTrainingData(m, n, vind);
     
     % Train tree
     % Root node contains the entire training set
@@ -23,7 +21,7 @@ for i = 1:numTrees
     root = struct('trData', rootTrData, 'cvData', [], 'svm', []); % Set root node
     rtree = tree(root);
     rtree = randomTree(rtree, 1, trset); % Grow starting from 2nd node
-    clear trSet
+    clear trset
     
     % Classify validation set using previously trained tree
     load('vset.mat', 'vset');

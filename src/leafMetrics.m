@@ -30,21 +30,22 @@ function [classConf, classDist, delta] = classConfidence( leaves, params )
 numTrees = params.numTrees;
 numClasses = params.numClasses;
 
-numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) / numTrees;
-classConf = zeros(numClasses, numSamples);
-
+numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ numTrees;
+classConf = single(zeros(numClasses, numSamples));
 
 classDist = classDistribution(leaves, numClasses);
 delta = computeDeltas(leaves, numTrees);
 
-fprintf('Calculating class confidence\n');
+fprintf('Calculating class confidence...');
+tic;
 for y = 1:numClasses
-    for s = 1:numSamples
-        classConf(y,s) = sum( delta(:,s) .* classDist(y,:)' );
+    parfor s = 1:numSamples
+        classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
     end
 end
 
 classConf = classConf ./ numTrees;
+toc;
 
 end
 
@@ -55,10 +56,10 @@ function classDist = classDistribution( leaves, numClasses )
 %  numClasses : The number of the different food classes
 
 %  classDist : The class distributions of all the leaves
-fprintf('Calculating class distributions\n');
-
+fprintf('Calculating class distributions...');
+tic;
 numLeaves = size(leaves, 2);
-classDist = zeros(numClasses, numLeaves);
+classDist = single(zeros(numClasses, numLeaves));
 
 for l = 1:numLeaves
     
@@ -71,6 +72,7 @@ for l = 1:numLeaves
         classDist(y,l) = sum(leafClasses == y) / numel(leafClasses);
     end
 end
+toc;
 
 end
 
@@ -86,15 +88,18 @@ function distinct = distinctiveness(leaves, classConf, delta, params)
 numLeaves = size(leaves, 2);
 numClasses = params.numClasses;
 
-distinct = zeros(numLeaves, numClasses);
+distinct = single(zeros(numLeaves, numClasses));
 
-fprintf('Calculating distinctiveness\n');
+fprintf('Calculating distinctiveness...');
+tic;
+
 for y = 1:numClasses
-    for l = 1:numLeaves
-        distinct(l,y) = sum( delta(l,:) .* classConf(y,:) );
+    parfor l = 1:numLeaves
+        distinct(l,y) = sum( single(delta(l,:)) .* classConf(y,:) );
     end 
 end
 
+toc;
 end
 
 function delta = computeDeltas(leaves, numTrees)
@@ -107,22 +112,17 @@ function delta = computeDeltas(leaves, numTrees)
 %   delta(l,s) = {
 %                { 0, otherwise
 
-fprintf('Computing deltas\n');
-
+fprintf('Computing deltas...');
+tic;
 numLeaves = length(leaves);
-numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) / numTrees;
-delta = zeros(numLeaves, numSamples);
+numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ numTrees;
+delta = uint8(zeros(numLeaves, numSamples));
 
 for l = 1:numLeaves
-    fprintf('Leaf %d/%d\n', l, numLeaves);
-    
-    sampleIds = extractfield(leaves(l).cvData, 'validationIndex');
-    
-    parfor s = 1:numSamples
-        if any(sampleIds == s)
-            delta(l, s) = 1;
-        end
-    end
+    sampleIds = leaves(l).cvData.validationIndex;
+    [C, IA, IB] = intersect(sampleIds, 1:numSamples);
+    delta(l, IB) = 1;
 end
 
+toc;
 end
