@@ -1,4 +1,4 @@
-function pred = svmPredict(model, X)
+function [predictions, scores] = svmPredict(model, X)
 %SVMPREDICT returns a vector of predictions using a trained LINEAR SVM model
 %(svmTrain). 
 %   pred = SVMPREDICT(model, X) returns a vector of predictions using a 
@@ -16,7 +16,7 @@ function pred = svmPredict(model, X)
 
 % Dataset 
 m = size(X, 1);
-pred = zeros(m, 1);
+predictions = zeros(m, 1);
 
 % We can use the weights and bias directly if working with the 
 % linear kernel
@@ -27,8 +27,9 @@ else
 end
 
 % Convert predictions into 0 / 1
-pred(p >= 0) =  1;
-pred(p <  0) =  0;
+scores = p;
+predictions(p >= 0) =  1;
+predictions(p <  0) =  0;
 
 end
 

@@ -14,7 +14,7 @@ function grid = spatialPyramid(levels, image, segments)
 level  = spatialPyramidGrid(width, height, levels);
 totalCells = sum(4.^(0:levels-1));
 grid(totalCells) = struct('spixelsToAverage', []);
-
+spIndices = unique(segments);
 i = 1;
 for l = 1:levels
     cells = level(l).cell;
@@ -35,7 +35,7 @@ for l = 1:levels
         % This converts them to sequentials i.e indices to the positions of
         % the vector that contains the sp indices
         for t = 1:length(temp)
-            ind(t) = find(unique(segments) == temp(t));
+            ind(t) = find(spIndices == temp(t));
         end
 
         grid(i).spixelsToAverage = ind;

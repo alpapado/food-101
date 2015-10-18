@@ -1,4 +1,4 @@
- clear; clc;
+%  clear; clc;
  
 % Read class labels from file
 load('matlab.mat');
@@ -23,17 +23,16 @@ y = single(zeros(numTrImages, 1));
 
 for i = 1:numTrImages
     try
+        tic
         fprintf('%d/%d ', i, numTrImages);
         str = num2str(cell2mat(trImages(i)));
         split = strsplit(str, '/');
         class = num2str(cell2mat(split(1)));
-
         imgPath = ['data/images/' str '.jpg'];
         image = imread(imgPath);
-        tic;
         X(i,:) = extractImageFeatureVector(image, models, params);
         y(i) = find(strcmp(classes, class));
-        toc;
+        toc
     catch ME
         disp(getReport(ME,'extended'));
     end

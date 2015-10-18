@@ -13,14 +13,13 @@ function scores = imageScore(models, features)
 
 scores = zeros(numSuperpixels, numClasses, numComponents);
 X = features;
-y = randi([0 1], numSuperpixels, 1); % not important
 
-parfor k = 1:numClasses
+for k = 1:numClasses
     for n = 1:numComponents          
         model = models(k, n).svm;
         
         % TODO Fix probability estimates (maybe not necessary)
-        [~, ~, prob_estimates] = predict(y, sparse(X), model, '-q');       
+        [~, prob_estimates] = svmPredict(model, X);
         scores(:, k, n) = prob_estimates;
     end
 end

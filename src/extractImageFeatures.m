@@ -57,7 +57,7 @@ for i = 1:numSuperpixels
         % 2) PCA whitened data is ifv encoded
         
         % Step 0
-        SURFs = ssrt(allSurfs(points, :)); 
+        SURFs = allSurfs(points, :); 
         
         poi = uint8(zeros(length(points), 3)); % Image region whose lab values to compute
         for j = 1:length(points)
@@ -68,7 +68,6 @@ for i = 1:numSuperpixels
         % Step 1 and 2
         surfsEncoding = ifvEncode(pcaw(SURFs, params.surfPca), params.surfGmm);
         labEncoding = ifvEncode(pcaw(LABs, params.labPca), params.labGmm);
-
         features(i, :) = [surfsEncoding; labEncoding];
     else
 %         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');

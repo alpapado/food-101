@@ -23,10 +23,10 @@ featureVec = single(zeros(numClasses * numComponents * numCells, 1));
 
 i = 0;
 for gridCell = grid
-    ind = gridCell.spixelsToAverage; % sp indexing is not always sequential
-    size(scores);
+    ind = gridCell.spixelsToAverage;
     X = scores(ind, :, :);
     av = mean(X, 1);
+
     iStart = i * numClasses * numComponents + 1;
     iEnd = iStart + numClasses * numComponents - 1;
     featureVec(iStart : iEnd) = av(:);
