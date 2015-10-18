@@ -1,4 +1,4 @@
-function models = mineComponents(trees, vset, params)
+function models = mineComponents(trees, metrics, vset, params)
 %mineComponents Mine discriminative components using the forest leaves
 %   The process is as follows: First, the leaves are sorted based on their
 %   distinctiveness. Those that contain too much similar information are
@@ -14,14 +14,13 @@ numComponents = params.numComponents;
 models(numClasses, numComponents) = struct('svm', []);
 
 leaves = cell2mat(extractfield(trees, 'leaves'));
-[~, ~, ~, distinct] = load('metrics');
-% load('metrics');
+distinct = metrics.distinct;
 
 % For a single class y, evaluate how many discriminative samples are
 % located in each leaf by considering distinct(l,c)
 for y = 1:numClasses
     fprintf('class %d --> ', y);
-    
+    tic;
     % Sort leaves according to distinction score for current class
     distScore = distinct(:, y);
     [~, indexes] = sort(distScore, 'descend');
@@ -37,6 +36,7 @@ for y = 1:numClasses
     
     % Train models for each top leaf
     models(y,:) = trainModels(topLeaves, y, vset);
+    toc;
 end
 
 end
@@ -63,9 +63,11 @@ for i = 1:numModels
  
     negatives = find(tempY==0);
     positives = find(tempY==1);
-    fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
+%     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
    
-    negativesToKeep = negatives(1:length(positives)+300);
+    inbalance = randi([250 500], 1, 1);
+    
+    negativesToKeep = negatives(randi([1 length(negatives)], length(positives)+inbalance, 1));
     tempY = tempY([positives; negativesToKeep]);
     tempX = tempX([positives; negativesToKeep], :);
     
@@ -73,14 +75,17 @@ for i = 1:numModels
     X = tempX(permutation, :);
     y = tempY(permutation);
 
-    fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
+%     fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
     % Train model
     model = train(y, sparse(double(X)), '-s 3 -q');
     models(i).svm = model;
-
-     meval = evaluateModel(model, X, y);
-     fprintf('F-measure = %s\n\n', num2str(meval(4)));
     
+%     y1 = predict(y, sparse(double(X)), model, '-q')
+%     y2 = svmPredict(model, X);
+%     isequal(y1, y2)
+%     meval = evaluateModel(model, X, y);
+%     fprintf('F-measure = %s\n\n', num2str(meval(4)));
+%     
     % TODO Hard negative mining
 end
 

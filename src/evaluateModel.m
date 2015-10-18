@@ -1,4 +1,4 @@
- function eval = evaluateModel(model, validationSet, labels)
+ function eval = evaluateModel(model, X, y)
 % This fucntion evaluates the performance of a classification model by 
 % calculating the common performance measures: Accuracy, Sensitivity, 
 % Specificity, Precision, Recall, F-Measure, G-mean.
@@ -8,8 +8,8 @@
 %                    classification model
 % Output: EVAL = Row matrix with all the performance measures
 
-actual = labels;
-predicted = predict(double(labels), sparse(double(validationSet)), model, '-q');
+actual = y;
+predicted = predict(double(y), sparse(double(X)), model, '-q');
 
 idx = (actual()==1);
 

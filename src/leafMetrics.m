@@ -38,8 +38,8 @@ delta = computeDeltas(leaves, numTrees);
 
 fprintf('Calculating class confidence...');
 tic;
-for y = 1:numClasses
-    parfor s = 1:numSamples
+parfor y = 1:numClasses
+    for s = 1:numSamples
         classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
     end
 end
@@ -93,8 +93,8 @@ distinct = single(zeros(numLeaves, numClasses));
 fprintf('Calculating distinctiveness...');
 tic;
 
-for y = 1:numClasses
-    parfor l = 1:numLeaves
+parfor y = 1:numClasses
+    for l = 1:numLeaves
         distinct(l,y) = sum( single(delta(l,:)) .* classConf(y,:) );
     end 
 end
@@ -119,9 +119,8 @@ numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'vali
 delta = uint8(zeros(numLeaves, numSamples));
 
 for l = 1:numLeaves
-    sampleIds = leaves(l).cvData.validationIndex;
-    [C, IA, IB] = intersect(sampleIds, 1:numSamples);
-    delta(l, IB) = 1;
+    sampleIds = leaves(l).cvData.validationIndex;  
+    delta(l, sampleIds) = 1;
 end
 
 toc;

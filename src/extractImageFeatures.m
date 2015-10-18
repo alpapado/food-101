@@ -1,7 +1,6 @@
 function features = extractImageFeatures(image, segments, params)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
-fid = fopen('error.txt', 'a');
 
 % Preallocate space for result
 spIndices = unique(segments); % Superpixel indices are not always sequential

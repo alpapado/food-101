@@ -1,8 +1,8 @@
-function [ featureVec ] = extractImageFeatureVector( image, models, pyramidLevels )
+function [ featureVec ] = extractImageFeatureVector( image, models, params )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-
+pyramidLevels = params.pyramidLevels;
 numCells = sum(4 .^ (0:pyramidLevels-1));
 [numClasses, numComponents] = size(models);
 
@@ -10,20 +10,21 @@ numCells = sum(4 .^ (0:pyramidLevels-1));
 segments = segmentImage(image);
 
 % Compute the features for all superpixels
-[features, validSegments] = extractImageFeatures(image, segments);
+features = extractImageFeatures(image, segments, params);
 
 % Calculate the score matrix
 scores = imageScore(models, features);
 
 % Calculate the spatial pyramid grid
-grid = spatialPyramid(pyramidLevels, image, segments, validSegments);
+grid = spatialPyramid(pyramidLevels, image, segments);
 
 % Preallocation
 featureVec = single(zeros(numClasses * numComponents * numCells, 1));
 
 i = 0;
 for gridCell = grid
-    ind = gridCell.spixelsToAverage; % sometimes is empty
+    ind = gridCell.spixelsToAverage; % sp indexing is not always sequential
+    size(scores);
     X = scores(ind, :, :);
     av = mean(X, 1);
     iStart = i * numClasses * numComponents + 1;

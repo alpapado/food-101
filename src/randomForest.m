@@ -42,6 +42,7 @@ for i = 1:numTrees
     trees(i).tree = rtree;
     trees(i).leaves = leaves;
     
+    save('trees', 'trees');
 end
 
 

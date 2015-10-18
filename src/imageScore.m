@@ -8,7 +8,7 @@ function scores = imageScore(models, features)
 
 % scores[numSuperpixels x numClasses x numComponents] score array
 
-[numSuperpixels, ~] = size(features); % Ignore too small superpixels
+[numSuperpixels, ~] = size(features);
 [numClasses, numComponents] = size(models);
 
 scores = zeros(numSuperpixels, numClasses, numComponents);
@@ -18,7 +18,9 @@ y = randi([0 1], numSuperpixels, 1); % not important
 parfor k = 1:numClasses
     for n = 1:numComponents          
         model = models(k, n).svm;
-        [~, ~, prob_estimates] = predict(y, sparse(X), model, '-q');
+        
+        % TODO Fix probability estimates (maybe not necessary)
+        [~, ~, prob_estimates] = predict(y, sparse(X), model, '-q');       
         scores(:, k, n) = prob_estimates;
     end
 end

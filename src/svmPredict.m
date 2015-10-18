@@ -21,7 +21,7 @@ pred = zeros(m, 1);
 % We can use the weights and bias directly if working with the 
 % linear kernel
 if model.bias ~= -1
-    p = X * transpose(model.w) + model.b;
+    p = X * transpose(model.w) + model.bias;
 else
     p = X * transpose(model.w);
 end

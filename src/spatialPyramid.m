@@ -1,4 +1,4 @@
-function grid = spatialPyramid(levels, image, segments, validSegments)
+function grid = spatialPyramid(levels, image, segments)
 %spatialPyramid Implements a spatial pyramid scheme
 %   Returns an object that contains the points that
 %   constitute the rectangles of the grid at the various levels of
@@ -29,17 +29,17 @@ for l = 1:levels
 
         % Make sure this works
         temp = unique(segments(min(xv):max(xv), min(yv):max(yv)));
+        ind = zeros(length(temp), 1);
         
-        % Reject segments that were too small to be encoded
-        indexOfInvalids = find(validSegments == 0);
-        toKeep = ones(length(temp), 1);
+        % Temp contains sp indices which are not always sequential
+        % This converts them to sequentials i.e indices to the positions of
+        % the vector that contains the sp indices
         for t = 1:length(temp)
-            if ismember(temp(t), indexOfInvalids-1)
-                toKeep(t) = 0;
-            end
+            ind(t) = find(unique(segments) == temp(t));
         end
-        temp(logical(toKeep));
-        grid(i).spixelsToAverage = temp(logical(toKeep));  
+
+        grid(i).spixelsToAverage = ind;
+        
         i = i + 1;
     end
 end
