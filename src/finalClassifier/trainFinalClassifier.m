@@ -1,13 +1,13 @@
 function [Xtest, Ytest] = trainFinalClassifier()
 % Read class labels from file
-load('matlab.mat', 'classes');
-load('models.mat');
+load('classes.mat', 'classes');
+load('components.mat');
 params = load('encoding_params.mat');
 pyramidLevels = 3;
 params.pyramidLevels = pyramidLevels;
 params.classes = classes;
 
-% [Xtrain, Ytrain] = createTraining(models, params);
+[Xtrain, Ytrain] = createTraining(models, params);
 [Xtest, Ytest] = createTest(models, params);
 % model = train(double(Ytrain), sparse(double(Xtrain)), '-s 3 -q');
 % modelEval = evaluateModel(model, Xtest, Ytest);

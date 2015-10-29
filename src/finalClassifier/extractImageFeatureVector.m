@@ -1,5 +1,5 @@
 function [ featureVec ] = extractImageFeatureVector( image, models, params )
-%UNTITLED Summary of this function goes here
+%extractImageFeatureVector Summary of this function goes here
 %   Detailed explanation goes here
 
 pyramidLevels = params.pyramidLevels;

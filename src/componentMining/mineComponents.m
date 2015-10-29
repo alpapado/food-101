@@ -81,11 +81,7 @@ for i = 1:numModels
     models(i).svm = model;
     
 %     y1 = predict(y, sparse(double(X)), model, '-q')
-%     y2 = svmPredict(model, X);
-%     isequal(y1, y2)
-%     meval = evaluateModel(model, X, y);
-%     fprintf('F-measure = %s\n\n', num2str(meval(4)));
-%     
+     
     % TODO Hard negative mining
 end
 
