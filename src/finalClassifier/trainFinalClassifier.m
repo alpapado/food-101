@@ -1,43 +1,46 @@
-function [Xtest, Ytest] = trainFinalClassifier()
+function trainFinalClassifier()
 % Read class labels from file
 load('classes.mat', 'classes');
 load('components.mat');
 params = load('encoding_params.mat');
 pyramidLevels = 3;
 params.pyramidLevels = pyramidLevels;
-params.classes = classes;
+params.classes = classes; 
 
-[Xtrain, Ytrain] = createTraining(models, params);
-[Xtest, Ytest] = createTest(models, params);
-% model = train(double(Ytrain), sparse(double(Xtrain)), '-s 3 -q');
-% modelEval = evaluateModel(model, Xtest, Ytest);
-% fprintf('Accuracy = %f\n', modelEval(1));
+%[X, y] = createTraining(components, params);
+%save('train.mat', 'X', 'y');
+%clear X y
+
+[X, y] = createTest(components, params);
+save('test.mat', 'X', 'y');
+clear X y
+
 end
 
-function [X,y] = createTraining(models, params)
+function [X,y] = createTraining(components, params)
 fid = fopen('data/meta/train.txt');
 trainImages = textscan(fid, '%s', 'Delimiter', '\n');
 trainImages = trainImages{1};
 
-[X, y] = encodeImageSet(trainImages, models, params);
+[X, y] = encodeImageSet(trainImages, components, params);
 end
 
-function [X,y] = createTest(models, params)
+function [X,y] = createTest(components, params)
 fid = fopen('data/meta/test.txt');
 testImages = textscan(fid, '%s', 'Delimiter', '\n');
 testImages = testImages{1};
 
-[X, y] = encodeImageSet(testImages, models, params);
+[X, y] = encodeImageSet(testImages, components, params);
 end
 
 
-function [X,y] = encodeImageSet(imgSet, models, params)
+function [X,y] = encodeImageSet(imgSet, components, params)
 
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
 numImages = length(imgSet);
 
-[numClasses, numComponents] = size(models);
+[numClasses, numComponents] = size(components);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid
 d = numClasses * numComponents * numCells; % Dimensionality of feature vec
 
@@ -53,7 +56,7 @@ for i = 1:numImages
         class = num2str(cell2mat(split(1)));
         imgPath = ['data/images/' str '.jpg'];
         image = imread(imgPath);
-        X(i,:) = extractImageFeatureVector(image, models, params);
+        X(i,:) = extractImageFeatureVector(image, components, params);
         y(i) = find(strcmp(classes, class));
         toc
     catch ME

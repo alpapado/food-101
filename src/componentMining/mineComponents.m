@@ -1,4 +1,4 @@
-function models = mineComponents(trees, metrics, vset, params)
+function components = mineComponents(trees, metrics, vset, params)
 %mineComponents Mine discriminative components using the forest leaves
 %   The process is as follows: First, the leaves are sorted based on their
 %   distinctiveness. Those that contain too much similar information are
@@ -9,16 +9,16 @@ function models = mineComponents(trees, metrics, vset, params)
 %   act as negative. In addition, iterative hard-negative mining is
 %   performed in order to speed up the process.
 
-numClasses = params.numClasses;
-numComponents = params.numComponents;
-models(numClasses, numComponents) = struct('svm', []);
+nClasses = params.numClasses;
+nComponents = params.numComponents;
+components(nClasses, nComponents) = struct('svm', []);
 
 leaves = cell2mat(extractfield(trees, 'leaves'));
 distinct = metrics.distinct;
 
 % For a single class y, evaluate how many discriminative samples are
 % located in each leaf by considering distinct(l,c)
-for y = 1:numClasses
+for y = 1:nClasses
     fprintf('class %d --> ', y);
     tic;
     % Sort leaves according to distinction score for current class
@@ -27,15 +27,14 @@ for y = 1:numClasses
     sortedLeaves = leaves(indexes);
     
     % Prune sortedLeaves
-    % TODO Speed up and fix pruneLeaves function
     prunedLeaves = sortedLeaves;
 %     prunedLeaves = pruneLeaves(sortedLeaves);
     
     % Select top N (numComponents) leaves
-    topLeaves = prunedLeaves(1:numComponents);
+    topLeaves = prunedLeaves(1:nComponents);
     
     % Train models for each top leaf
-    models(y,:) = trainModels(topLeaves, y, vset);
+    components(y,:) = trainModels(topLeaves, y, vset);
     toc;
 end
 
@@ -48,42 +47,78 @@ function models = trainModels(topLeaves, class, vset)
 %   randomly selected from the entire trainingSet, is used as negative
 %   samples. The training procedure is further refined using hard negative
 %   mining.
-numModels = length(topLeaves);
-models(numModels) = struct('svm', []);
+nModels = length(topLeaves);
+iterations = 3; % Hard negative iterations
+models(nModels) = struct('svm', []);
 
-for i = 1:numModels
+for i = 1:nModels
     leaf = topLeaves(i);
 
     leafClasses = extractfield(leaf.cvData, 'classIndex');
     vind = extractfield(leaf.cvData, 'validationIndex');
     
-    % Balance the training set
-    tempX = vset.features(vind, :);
-    tempY = transpose(double(leafClasses == class));
+    X = vset.features(vind, :);
+    y = transpose(double(leafClasses == class));
  
-    negatives = find(tempY==0);
-    positives = find(tempY==1);
+    % Do hard negative mining
+    model = hardNegativeMining(X, y, iterations);
+    models(i).svm = model;
+       
+end
+
+end
+
+function model = hardNegativeMining(X, y, iterations)
+    % Negatives to be used for hard negative mining later
+%     negativeTestVectors = X(y==0, :); 
+
+    negatives = find(y==0);
+    positives = find(y==1);
 %     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
    
-    inbalance = randi([250 500], 1, 1);
+    imbalance = randi([250 500], 1, 1);
     
-    negativesToKeep = negatives(randi([1 length(negatives)], length(positives)+inbalance, 1));
-    tempY = tempY([positives; negativesToKeep]);
-    tempX = tempX([positives; negativesToKeep], :);
+    negativesToKeep = negatives(randi([1 length(negatives)], length(positives) + imbalance, 1));
     
-    permutation = randperm(length(tempY));
-    X = tempX(permutation, :);
-    y = tempY(permutation);
-
+    % Remove the negative samples contained in the initial training set
+%     negativeTestVectors = negativeTestVectors(length(positives) + imbalance + 1:end, :);  
+    
+    y = y([positives; negativesToKeep]);
+    X = X([positives; negativesToKeep], :);
+    
+    % Shuffle 
+    permutation = randperm(length(y));
+    X = X(permutation, :);
+    y = y(permutation);
 %     fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
-    % Train model
-    model = train(y, sparse(double(X)), '-s 3 -q');
-    models(i).svm = model;
     
-%     y1 = predict(y, sparse(double(X)), model, '-q')
-     
-    % TODO Hard negative mining
-end
+    % Train model once
+    model = train(y, sparse(double(X)), '-s 3 -q');
+    
+%     nTestNegatives = size(negativeTestVectors, 1);
+%     tempX = negativeTestVectors;
+%     tempY = zeros(nTestNegatives, 1);
+%     eval = evaluateModel(model, tempX,  tempY);
+%     fprintf('accuracy = %f\n', eval(1));
+%     pause
+    
+    % ... and then train some more
+%     nTestNegatives = size(negativeTestVectors, 1);
+%     chunkSize = ceil(nTestNegatives / iterations);
+%     
+%     for i = 1:iterations
+%         iStart = (i-1) * chunkSize + 1;
+%         iEnd = min(iStart+chunkSize-1, nTestNegatives);
+%         
+%         tempX = negativeTestVectors(iStart:iEnd, :);
+%         tempY = zeros(iEnd-iStart+1, 1);
+%         [predicted, accuracy] = evaluateModel(model, tempX,  tempY);
+%         fprintf('Iteration %d accuracy = %f\n', i, accuracy);
+%         % Get false positives, add them to X and retrain the model
+%         fp = predicted == 1;
+%         X = [X; negativeTestVectors(fp, :)];
+%         y = [y; tempY];
+%     end
 
 end
 

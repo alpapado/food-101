@@ -1,7 +1,7 @@
 load('trees.mat');
 load('vset', 'vset');
-load('matlab.mat');
-metrics = load('metrics');
+load('classes.mat', 'classes');
+% metrics = load('metrics');
 
 leaves = cell2mat(extractfield(trees, 'leaves'));
 numComponents = 20;
