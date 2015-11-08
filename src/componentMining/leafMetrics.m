@@ -15,7 +15,7 @@ metrics.distinct = distinct;
 
 end
 
-function [classConf, classDist, delta] = classConfidence( leaves, params )
+function [classConf, classDist, delta] = classConfidence(leaves, params)
 %classConfidence Calculates the class confidence scores for each sample in
 %the validation set
 %   The class confidence score for a sample s belonging in class y is 
@@ -27,49 +27,50 @@ function [classConf, classDist, delta] = classConfidence( leaves, params )
 % delta(l,s) : Auxilliary variable that indicates presence or not of sample
 % s in leaf l
 
-numTrees = params.numTrees;
-numClasses = params.numClasses;
+nTrees = params.numTrees;
+nClasses = params.numClasses;
 
-numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ numTrees;
-classConf = single(zeros(numClasses, numSamples));
+numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
+classConf = single(zeros(nClasses, numSamples));
 
-classDist = classDistribution(leaves, numClasses);
-delta = computeDeltas(leaves, numTrees);
+classDist = classDistribution(leaves, nClasses);
+delta = computeDeltas(leaves, nTrees);
 
 fprintf('Calculating class confidence...');
 tic;
-parfor y = 1:numClasses
+parfor y = 1:nClasses
     for s = 1:numSamples
         classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
     end
 end
 
-classConf = classConf ./ numTrees;
+classConf = classConf ./ nTrees;
 toc;
 
 end
 
-function classDist = classDistribution( leaves, numClasses )
+function classDist = classDistribution( leaves, nClasses )
 %classDistribution Returns the distributions of all classes in all the
 %leaves of the forest
 %  leaves : All the leaves in the forest
-%  numClasses : The number of the different food classes
+%  nClasses : The number of the different food classes
 
 %  classDist : The class distributions of all the leaves
 fprintf('Calculating class distributions...');
 tic;
-numLeaves = size(leaves, 2);
-classDist = single(zeros(numClasses, numLeaves));
+nLeaves = size(leaves, 2);
+classDist = single(zeros(nClasses, nLeaves));
 
-for l = 1:numLeaves
+for l = 1:nLeaves
     
     if isempty(leaves(l).trData)
         continue
     end
     
     leafClasses = extractfield(leaves(l).trData, 'classIndex');
-    for y = 1:numClasses
-        classDist(y,l) = sum(leafClasses == y) / numel(leafClasses);
+
+    for y = 1:nClasses
+        classDist(y,l) = sum(leafClasses == y) / length(leafClasses);
     end
 end
 toc;
@@ -85,16 +86,16 @@ function distinct = distinctiveness(leaves, classConf, delta, params)
 %   collect many discriminative samples i.e those that have a high class
 %   confidence score.
 
-numLeaves = size(leaves, 2);
-numClasses = params.numClasses;
+nLeaves = size(leaves, 2);
+nClasses = params.numClasses;
 
-distinct = single(zeros(numLeaves, numClasses));
+distinct = single(zeros(nLeaves, nClasses));
 
 fprintf('Calculating distinctiveness...');
 tic;
 
-parfor y = 1:numClasses
-    for l = 1:numLeaves
+parfor y = 1:nClasses
+    for l = 1:nLeaves
         distinct(l,y) = sum( single(delta(l,:)) .* classConf(y,:) );
     end 
 end
@@ -102,7 +103,7 @@ end
 toc;
 end
 
-function delta = computeDeltas(leaves, numTrees)
+function delta = computeDeltas(leaves, nTrees)
 %computeDeltas Calculates the deltas for all combinations of samples and
 %leaves
 %   The deltas are a simple auxilliary variable that show whether or not a
@@ -114,11 +115,13 @@ function delta = computeDeltas(leaves, numTrees)
 
 fprintf('Computing deltas...');
 tic;
-numLeaves = length(leaves);
-numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ numTrees;
-delta = uint8(zeros(numLeaves, numSamples));
+nLeaves = length(leaves);
 
-for l = 1:numLeaves
+% Number of samples in validation set
+numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
+delta = uint8(zeros(nLeaves, numSamples));
+
+for l = 1:nLeaves
     sampleIds = leaves(l).cvData.validationIndex;  
     delta(l, sampleIds) = 1;
 end

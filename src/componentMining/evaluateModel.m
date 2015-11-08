@@ -19,7 +19,7 @@ N = p + n;
 
 tp = sum(actual(idx) == predicted(idx));
 tn = sum(actual(~idx) == predicted(~idx));
-fp = n-tn
+fp = n-tn;
 
 tp_rate = tp/p;
 

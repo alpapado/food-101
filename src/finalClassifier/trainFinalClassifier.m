@@ -7,34 +7,26 @@ pyramidLevels = 3;
 params.pyramidLevels = pyramidLevels;
 params.classes = classes; 
 
-%[X, y] = createTraining(components, params);
-%save('train.mat', 'X', 'y');
-%clear X y
+[X, y] = encodeImageSet('train', components, params);
+save('train.mat', 'X', 'y');
+clear X y
 
-[X, y] = createTest(components, params);
+[X, y] = encodeImageSet('test', components, params);
 save('test.mat', 'X', 'y');
 clear X y
 
 end
 
-function [X,y] = createTraining(components, params)
-fid = fopen('data/meta/train.txt');
-trainImages = textscan(fid, '%s', 'Delimiter', '\n');
-trainImages = trainImages{1};
+function [X, y] = encodeImageSet(type, components, params)
 
-[X, y] = encodeImageSet(trainImages, components, params);
+if strcmp(type,'train')
+  fid = fopen('data/meta/train.txt');
+elseif strcmp(type,'test');
+  fid = fopen('data/meta/test.txt');
 end
 
-function [X,y] = createTest(components, params)
-fid = fopen('data/meta/test.txt');
-testImages = textscan(fid, '%s', 'Delimiter', '\n');
-testImages = testImages{1};
-
-[X, y] = encodeImageSet(testImages, components, params);
-end
-
-
-function [X,y] = encodeImageSet(imgSet, components, params)
+images = textscan(fid, '%s', 'Delimiter', '\n');
+imgSet = images{1};
 
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
@@ -64,4 +56,5 @@ for i = 1:numImages
     end
 
 end
+
 end
