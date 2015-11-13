@@ -75,7 +75,7 @@ for i = 1:numSuperpixels
 %         imshow(J);
 %         pause
        fid = fopen('error.txt', 'a');
-       fprintf(fid, 'Image %s\n', imname);
+%        fprintf(fid, 'Image %s\n', imname);
        fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(segments==s)));
        fprintf(fid,'Superpixel %d has %d valid points \n', s, length(points));
        fprintf(fid,'Too few valid points for superpixel %d\n', s);
