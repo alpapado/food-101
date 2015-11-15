@@ -7,6 +7,7 @@ m = matfile('data.mat');
 
 % [vset, vind] = sampleValidationSet(m, n); 
 % save('vset.mat', 'vset', 'vind');
+% clear vset
 load('vset.mat', 'vind');
 
 for i = 1:numTrees

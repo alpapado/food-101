@@ -16,7 +16,7 @@ numSVMs = 100;
 
 % Set SVM parameters
 numData = length(trsetInd);
-numTrainingData = min(10*10^3, floor(0.6 * numData)); 
+numTrainingData = min(20*10^3, floor(0.6 * numData)); 
 classes = trset.classIndex;
 
 X = trset.features(trsetInd, :);
