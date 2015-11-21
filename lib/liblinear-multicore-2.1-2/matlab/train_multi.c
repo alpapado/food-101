@@ -17,9 +17,20 @@ typedef int mwIndex;
 #define CMD_LEN 2048
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 #define INF HUGE_VAL
+#define NUMBER_OF_FIELDS 6
+#define NUM_OF_RETURN_FIELD 6
 
 void print_null(const char *s) {}
 void print_string_matlab(const char *s) {mexPrintf(s);}
+
+static const char *field_names[] = {
+	"Parameters",
+	"nr_class",
+	"nr_feature",
+	"bias",
+	"Label",
+	"w",
+};
 
 void exit_with_help()
 {
@@ -71,7 +82,7 @@ void exit_with_help()
 // liblinear arguments
 struct parameter param;		// set by parse_command_line
 struct problem prob;		// set by read_problem
-struct model *model_;
+struct model* model_;
 struct feature_node *x_space;
 int flag_cross_validation;
 int flag_find_C;
@@ -81,6 +92,7 @@ int flag_solver_specified;
 int col_format_flag;
 int nr_fold;
 double bias;
+struct model** models = Malloc(struct model*, 100);
 
 // nrhs should be 3
 int parse_command_line(int nrhs, const mxArray *prhs[], char *model_file_name)
@@ -374,7 +386,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	// (for cross validation)
 	srand(1);
 
-	if(nlhs > 1)
+	if(nlhs > 2)
 	{
 		exit_with_help();
 		fake_answer(nlhs, plhs);
@@ -434,15 +446,120 @@ void mexFunction( int nlhs, mxArray *plhs[],
 			return;
 		}
 
-                // if all has gone well, procede with training
-                const char *error_msg;
+        // if all has gone well, procede with training
+        const char *error_msg;
+        int i;
+        int** y = Malloc(int*, 100);
+        for (i = 0; i < 100; i++){
+            y[i] = Malloc(int, prob.l);
+        }
 
-                model_ = train(&prob, &param);
-                error_msg = model_to_matlab_structure(plhs, model_);
-                if(error_msg)
-                        mexPrintf("Error: can't convert libsvm model to matrix structure: %s\n", error_msg);
-                free_and_destroy_model(&model_);
+        #pragma omp parallel for private(i)
+        for (i = 0; i < 100; i++){
+            problem sub_prob_omp;
+            sub_prob_omp.l = prob.l;
+            sub_prob_omp.n = prob.n;
+            sub_prob_omp.x = prob.x;
 
+            // Generate randoms in [0, 1] here
+            sub_prob_omp.y = Malloc(double,prob.l);
+
+            for (int j = 0; j < prob.l; j++){
+                sub_prob_omp.y[j] = round( (double)rand() / (double)RAND_MAX );
+                y[i][j] = sub_prob_omp.y[j];
+            }
+
+            models[i] = train(&sub_prob_omp, &param);
+        }
+
+        mwSize dims[2] = {1, 100};
+        mwSize ndim = 2;
+        mwIndex j;
+        (void) prhs;
+
+        plhs[0] = mxCreateStructArray(ndim, dims, NUMBER_OF_FIELDS, field_names); 
+        plhs[1] = mxCreateNumericMatrix(1, 100*prob.l, mxINT32_CLASS, mxREAL);
+        int* y_ptr = (int*) mxGetPr(plhs[1]);
+
+        for (j = 0; j < 100; j++) {
+            int k;
+            int nr_w;
+            double *ptr;
+            mxArray *return_model, **rhs;
+            int out_id = 0;
+            int n, w_size;
+            rhs = (mxArray **)mxMalloc(sizeof(mxArray *)*NUM_OF_RETURN_FIELD);
+
+            // Parameters
+            // for now, only solver_type is needed
+            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+            ptr = mxGetPr(rhs[out_id]);
+            ptr[0] = models[j]->param.solver_type;
+            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+            out_id++;
+
+            // nr_class
+            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+            ptr = mxGetPr(rhs[out_id]);
+            ptr[0] = models[j]->nr_class;
+            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+            out_id++;
+
+            if(models[j]->nr_class==2 && models[j]->param.solver_type != MCSVM_CS)
+                    nr_w=1;
+            else
+                    nr_w=models[j]->nr_class;
+
+            // nr_feature
+            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+            ptr = mxGetPr(rhs[out_id]);
+            ptr[0] = models[j]->nr_feature;
+            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+            out_id++;
+
+            // bias
+            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+            ptr = mxGetPr(rhs[out_id]);
+            ptr[0] = models[j]->bias;
+            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+            out_id++;
+
+            if(models[j]->bias>=0)
+                    n=models[j]->nr_feature+1;
+            else
+                    n=models[j]->nr_feature;
+
+            w_size = n;
+            // Label
+            if(models[j]->label)
+            {
+                    rhs[out_id] = mxCreateDoubleMatrix(models[j]->nr_class, 1, mxREAL);
+                    ptr = mxGetPr(rhs[out_id]);
+                    for(i = 0; i < models[j]->nr_class; i++)
+                            ptr[i] = models[j]->label[i];
+            }
+            else
+                    rhs[out_id] = mxCreateDoubleMatrix(0, 0, mxREAL);
+
+            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+            out_id++;
+
+            // w
+            rhs[out_id] = mxCreateDoubleMatrix(nr_w, w_size, mxREAL);
+            ptr = mxGetPr(rhs[out_id]);
+            for(int k = 0; k < w_size*nr_w; k++)
+                    ptr[k]=models[j]->w[k];
+
+            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+            out_id++;              
+
+            for (i = 0; i < prob.l; i++) {
+                y_ptr[i + j*prob.l] = y[j][i];
+                        mexPrintf("%d\t", y[j][i]);
+            }
+                    mexPrintf("\n");
+        }
+        
 		destroy_param(&param);
 		free(prob.y);
 		free(prob.x);

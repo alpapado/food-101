@@ -30,19 +30,19 @@ imgSet = images{1};
 
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
-numImages = length(imgSet);
+nImages = length(imgSet);
 
-[numClasses, numComponents] = size(components);
+[nClasses, nComponents] = size(components);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid
-d = numClasses * numComponents * numCells; % Dimensionality of feature vec
+d = nClasses * nComponents * numCells; % Dimensionality of feature vec
 
-X = single(zeros(numImages, d));
-y = uint8(zeros(numImages, 1));
+X = single(zeros(nImages, d));
+y = uint8(zeros(nImages, 1));
 
-for i = 1:numImages
+for i = 1:nImages
     try
         tic
-        fprintf('%d/%d ', i, numImages);
+        fprintf('%d/%d ', i, nImages);
         str = num2str(cell2mat(imgSet(i)));
         split = strsplit(str, '/');
         class = num2str(cell2mat(split(1)));

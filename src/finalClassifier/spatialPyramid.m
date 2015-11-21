@@ -11,24 +11,27 @@ function grid = spatialPyramid(levels, image, segments)
 %   feature histograms, and so on.
 
 [width, height, ~] = size(image);
-level  = spatialPyramidGrid(width, height, levels);
+level = spatialPyramidGrid(width, height, levels);
 totalCells = sum(4.^(0:levels-1));
 grid(totalCells) = struct('spixelsToAverage', []);
 spIndices = unique(segments);
 i = 1;
+
 for l = 1:levels
     cells = level(l).cell;
     levelCells = length(cells);
     
     for c = 1:levelCells
         cell = cells(c);
-       
+%         test = zeros(height,width);
         % Points of image that fall inside the current cell
         xv = round(cell.xv);
         yv = round(cell.yv);
 
         % Make sure this works
         temp = unique(segments(min(xv):max(xv), min(yv):max(yv)));
+        
+        
         ind = zeros(length(temp), 1);
         
         % Temp contains sp indices which are not always sequential
@@ -41,6 +44,9 @@ for l = 1:levels
         grid(i).spixelsToAverage = ind;
         
         i = i + 1;
+%         test(min(xv):max(xv), min(yv):max(yv)) = 255;
+%         imshow(test);
+%         pause
     end
 end
 

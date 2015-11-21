@@ -8,14 +8,14 @@ function scores = imageScore(models, features)
 
 % scores[numSuperpixels x numClasses x numComponents] score array
 
-[numSuperpixels, ~] = size(features);
-[numClasses, numComponents] = size(models);
+[nSuperpixels, ~] = size(features);
+[nClasses, nComponents] = size(models);
 
-scores = zeros(numSuperpixels, numClasses, numComponents);
+scores = zeros(nSuperpixels, nClasses, nComponents);
 X = features;
 
-for k = 1:numClasses
-    for n = 1:numComponents          
+for k = 1:nClasses
+    for n = 1:nComponents          
         model = models(k, n).svm;
         
         % TODO Fix probability estimates (maybe not necessary)

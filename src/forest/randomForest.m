@@ -1,8 +1,8 @@
-function trees = randomForest(numTrees, n)
+function trees = randomForest(nTrees, n)
 %randomForest Grows a random forest
 %   numTrees : Number of trees in forest
 %   n : Number of training data for a tree
-trees(numTrees) = struct('tree', [], 'leaves', []);
+trees(nTrees) = struct('tree', [], 'leaves', []);
 m = matfile('data.mat');
 
 % [vset, vind] = sampleValidationSet(m, n); 
@@ -10,7 +10,7 @@ m = matfile('data.mat');
 % clear vset
 load('vset.mat', 'vind');
 
-for i = 1:numTrees
+for i = 1:nTrees
     fprintf('Tree %d\n', i);
     
     % Sample training set
