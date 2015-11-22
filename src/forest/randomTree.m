@@ -26,15 +26,16 @@ function rtree = randomTree(rtree, parentId, trset )
 %growing the tree. Since it is not changed inside this function no copy of
 %it is created and no memory issue arises.
 
-fprintf('Node %d\n', parentId);
+fprintf('Node %d...', parentId);
 
 % Node fields
 field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
 
 % Calculate the splits
 parent = rtree.get(parentId);
+tic;
 [left, right, svm] = nodeSplit(trset, extractfield(parent.trData, 'trainingIndex'));
-
+toc;
 % Set parents svm
 parent.svm = svm;
 rtree = rtree.set(parentId, parent);

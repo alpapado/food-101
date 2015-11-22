@@ -12,11 +12,11 @@ left = struct('trainingIndex', [], 'classIndex', []);
 right = struct('trainingIndex', [], 'classIndex', []);
 
 % Number of SVM models to be trained as decision function
-numSVMs = 100;
+nSVMs = 100;
 
 % Set SVM parameters
-numData = length(trsetInd);
-numTrainingData = min(20*10^3, floor(0.6 * numData)); 
+nData = length(trsetInd);
+nTrainingData = min(20*10^3, floor(0.6 * nData)); 
 classes = trset.classIndex;
 
 X = trset.features(trsetInd, :);
@@ -30,49 +30,30 @@ X = trset.features(trsetInd, :);
 % memory requirements of the svm training, out of memory happens.
 
 % Initialize struct to be used by all the threads for result saving
-threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
+threadStruct(nSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
+[candidates, y] = train_multi(randi([0 1], nTrainingData, 1), sparse(double(X(1:nTrainingData, :))), '-s 3 -q');
 
-for i = 1:numSVMs
-    % Generate random binary partition of class labels
-    y = randi([0 1], numTrainingData, 1);
-    
-    % Keep generating random binary partion until at least 1 sample of 
-    % each class (0 or 1) is generated
-    while size(unique(y), 1) < 2
-        y = randi([0 1], numTrainingData, 1);
-    end
-     
+W = reshape(extractfield(candidates, 'w'), [8576 nSVMs]);
+y = reshape(y, nTrainingData, nSVMs);
+pred = X(nTrainingData+1:end, :) * W;
+allSplits = [y; pred];
+
+for i = 1:nSVMs
     try
-        % Train the SVM and discard training data
-        fprintf('Training svm %d on %d instances...', i, numTrainingData);
-        tstart = tic;
-        model = train(y, sparse(double(X(1:numTrainingData, :))), '-s 3 -q');
-        telapsed = toc(tstart);
-        fprintf('Elapsed time is %f\n', telapsed);
-        
-        fprintf('Classifying %d instances with custom svm predict...', numData-numTrainingData);
-        tstart = tic;
-        split = zeros(numData, 1);
-        split(1:length(y)) = y;
-        split(length(y)+1:end) = svmPredict(model, X(numTrainingData+1:end, :));
-        telapsed = toc(tstart);
-        fprintf('Elapsed time is %f\n', telapsed);
-        
-    catch ME
-        disp(ME);
-        continue;
-    end
+        % Calculate information gain
+        leftIndexes = trsetInd(allSplits(:,i) == 0);
+        rightIndexes = trsetInd(allSplits(:,i) == 1);
+        leftClasses = classes(leftIndexes);
+        rightClasses = classes(rightIndexes);
 
-    % Calculate information gain
-    leftIndexes = trsetInd(split == 0);
-    rightIndexes = trsetInd(split == 1);
-    leftClasses = classes(leftIndexes);
-    rightClasses = classes(rightIndexes);
-    
-    threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
-    threadStruct(i).leftSplit = leftIndexes;
-    threadStruct(i).rightSplit = rightIndexes;
-    threadStruct(i).svm = model;
+        informationGain(classes(trsetInd), leftClasses, rightClasses);
+        threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
+        threadStruct(i).leftSplit = leftIndexes;
+        threadStruct(i).rightSplit = rightIndexes;
+        threadStruct(i).svm = candidates(i);
+    catch ME
+        disp(getReport(ME,'extended'));
+    end
     
 end
 

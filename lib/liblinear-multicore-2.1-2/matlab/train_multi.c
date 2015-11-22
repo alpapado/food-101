@@ -555,9 +555,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
             for (i = 0; i < prob.l; i++) {
                 y_ptr[i + j*prob.l] = y[j][i];
-                        mexPrintf("%d\t", y[j][i]);
             }
-                    mexPrintf("\n");
         }
         
 		destroy_param(&param);
