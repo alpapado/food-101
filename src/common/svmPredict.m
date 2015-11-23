@@ -1,4 +1,4 @@
-function [predictions, scores] = svmPredict(model, X)
+function [predictions, scores] = svmPredict(models, X)
 %SVMPREDICT returns a vector of predictions using a trained LINEAR SVM model
 %(svmTrain). 
 %   pred = SVMPREDICT(model, X) returns a vector of predictions using a 
@@ -14,22 +14,35 @@ function [predictions, scores] = svmPredict(model, X)
 %     X = X';
 % end
 
-% Dataset 
+nModels = length(models);
 m = size(X, 1);
-predictions = zeros(m, 1);
 
-% We can use the weights and bias directly if working with the 
-% linear kernel
-if model.bias ~= -1
-    p = X * transpose(model.w) + model.bias;
-else
-    p = X * transpose(model.w);
+if nModels == 1
+    % If we have only one model
+    predictions = zeros(m, 1);
+
+    % We can use the weights and bias directly if working with the 
+    % linear kernel
+    if models.bias ~= -1
+        p = X * transpose(models.w) + models.bias;
+    else
+        p = X * transpose(models.w);
+    end
+
+    % Convert predictions into 0 / 1
+    scores = p;
+    predictions(p >= 0) =  1;
+    predictions(p <  0) =  0;
+else 
+    % If we have multiple models, we can perform prediction for all of them
+    % efficiently using again matrix multiplication
+    W = reshape(extractfield(models, 'w'), [8576 nModels]);
+    p = X * W;
+    scores = p;
+    predictions = zeros(m, nModels);
+    predictions(p >= 0) =  1;
+    predictions(p <  0) =  0;
 end
-
-% Convert predictions into 0 / 1
-scores = p;
-predictions(p >= 0) =  1;
-predictions(p <  0) =  0;
 
 end
 

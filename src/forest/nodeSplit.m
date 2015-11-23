@@ -31,11 +31,11 @@ X = trset.features(trsetInd, :);
 
 % Initialize struct to be used by all the threads for result saving
 threadStruct(nSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
-[candidates, y] = train_multi(randi([0 1], nTrainingData, 1), sparse(double(X(1:nTrainingData, :))), '-s 3 -q');
+[models, y] = train_multi(randi([0 1], nTrainingData, 1), sparse(double(X(1:nTrainingData, :))), '-s 3 -q');
 
-W = reshape(extractfield(candidates, 'w'), [8576 nSVMs]);
+
 y = reshape(y, nTrainingData, nSVMs);
-pred = X(nTrainingData+1:end, :) * W;
+pred = svmPredict(models, X(nTrainingData+1:end, :));
 allSplits = [y; pred];
 
 for i = 1:nSVMs
@@ -50,7 +50,7 @@ for i = 1:nSVMs
         threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
         threadStruct(i).leftSplit = leftIndexes;
         threadStruct(i).rightSplit = rightIndexes;
-        threadStruct(i).svm = candidates(i);
+        threadStruct(i).svm = models(i);
     catch ME
         disp(getReport(ME,'extended'));
     end
