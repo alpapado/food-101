@@ -2,7 +2,7 @@ function trainFinalClassifier()
 % Read class labels from file
 load('classes.mat', 'classes');
 load('components.mat');
-params = load('encoding_params.mat');
+load('encoding_params.mat');
 pyramidLevels = 3;
 params.pyramidLevels = pyramidLevels;
 params.classes = classes; 

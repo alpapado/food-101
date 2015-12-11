@@ -1,4 +1,4 @@
-function components = mineComponents(trees, metrics, vset, params)
+function components = mineComponents(leaves, metrics, vset, params)
 %mineComponents Mine discriminative components using the forest leaves
 %   The process is as follows: First, the leaves are sorted based on their
 %   distinctiveness. Those that contain too much similar information are
@@ -13,7 +13,7 @@ nClasses = params.numClasses;
 nComponents = params.numComponents;
 components(nClasses, nComponents) = struct('svm', []);
 
-leaves = cell2mat(extractfield(trees, 'leaves'));
+
 distinct = metrics.distinct;
 
 % For a single class y, evaluate how many discriminative samples are
@@ -48,7 +48,7 @@ function models = trainModels(topLeaves, class, vset)
 %   samples. The training procedure is further refined using hard negative
 %   mining.
 nModels = length(topLeaves);
-iterations = 10; % Hard negative iterations
+iterations = 0; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
 for i = 1:nModels
@@ -77,7 +77,7 @@ function model = hardNegativeMining(X, y, iterations)
     positives = find(y==1);
     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
    
-    imbalance = randi([10 100], 1, 1);
+    imbalance = randi([250 500], 1, 1);
     
     negativesToKeep = negatives(1:length(positives) + imbalance);
     
