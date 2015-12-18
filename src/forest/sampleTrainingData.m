@@ -19,7 +19,7 @@ rng(seed);
 info = whos(m, 'classIndex');
 
 fprintf('Generating training set...');
-for i = 1:n
+parfor i = 1:n
     randInd = randi([1 info.size(1)], 1, 1);
     while ismember(randInd, v)
         randInd = randi([1 info.size(1)], 1, 1);
@@ -28,7 +28,7 @@ for i = 1:n
     features(i,:) = m.features(randInd, :);
     classIndex(i) = m.classIndex(randInd, 1);
 end
-% delete(gcp);
+delete(gcp);
 trset = struct('features', features, 'classIndex', classIndex);
 
 fprintf(' done\n');

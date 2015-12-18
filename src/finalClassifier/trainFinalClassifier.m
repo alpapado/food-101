@@ -6,7 +6,7 @@ load('encoding_params.mat');
 pyramidLevels = 3;
 params.pyramidLevels = pyramidLevels;
 params.classes = classes; 
-
+components = models;
 [X, y] = encodeImageSet('train', components, params);
 save('train.mat', 'X', 'y');
 clear X y

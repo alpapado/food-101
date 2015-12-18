@@ -16,7 +16,7 @@ nSVMs = 100;
 
 % Set SVM parameters
 nData = length(trsetInd);
-nTrainingData = min(20*10^3, floor(0.6 * nData)); 
+nTrainingData = min(20*10^3, floor(0.3 * nData)); 
 classes = trset.classIndex;
 
 X = trset.features(trsetInd, :);
@@ -33,7 +33,6 @@ X = trset.features(trsetInd, :);
 threadStruct(nSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
 [models, y] = train_multi(randi([0 1], nTrainingData, 1), sparse(double(X(1:nTrainingData, :))), '-s 3 -q');
 
-
 y = reshape(y, nTrainingData, nSVMs);
 pred = svmPredict(models, X(nTrainingData+1:end, :));
 allSplits = [y; pred];
@@ -45,8 +44,6 @@ for i = 1:nSVMs
         rightIndexes = trsetInd(allSplits(:,i) == 1);
         leftClasses = classes(leftIndexes);
         rightClasses = classes(rightIndexes);
-
-        informationGain(classes(trsetInd), leftClasses, rightClasses);
         threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
         threadStruct(i).leftSplit = leftIndexes;
         threadStruct(i).rightSplit = rightIndexes;

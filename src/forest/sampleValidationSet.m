@@ -11,12 +11,12 @@ vind = uint32(randi([1 info.size(1)], n, 1));
 features = single(zeros(n, 8576));
 classIndex = uint8(zeros(n, 1));
 
-for i = 1:length(vind)
+parfor i = 1:length(vind)
     features(i,:) = m.features(vind(i),:);
     classIndex(i) = m.classIndex(vind(i),1);
 end
 
-% delete(gcp);
+delete(gcp);
 vset = struct('features', features, 'classIndex', classIndex);
 fprintf(' done\n\n');
 
