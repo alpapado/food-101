@@ -6,7 +6,7 @@ trees(nTrees) = struct('tree', [], 'leaves', []);
 m = matfile('data.mat');
 
 [vset, vind] = sampleValidationSet(m, n); 
-% save('vset.mat', 'vset', 'vind');
+save('vset.mat', 'vset', 'vind');
 
 for i = 1:nTrees
     fprintf('Tree %d\n', i);

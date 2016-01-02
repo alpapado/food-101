@@ -6,55 +6,49 @@ list = strsplit(w, '\n'); % list of image encodings
 list(end) = []; % last is empty
 
 ind = randi([1 length(list)], 1000, 1);
-allSurfs = [];
+allSifts = [];
 allLabs = [];
 
-surfGmm = struct('means', [], 'covariances', [], 'priors', []);
+siftGmm = struct('means', [], 'covariances', [], 'priors', []);
 labGmm = struct('means', [], 'covariances', [], 'priors', []);
-surfPca = struct('avg', [], 'U', [], 'S', []);
+siftPca = struct('avg', [], 'U', [], 'S', []);
 labPca = struct('avg', [], 'U', [], 'S', []);
 
 parfor i = 1:length(ind)
     i
-    im = imread(num2str(cell2mat(list(ind(i)))));
+    I = imread(num2str(cell2mat(list(ind(i)))));
       
     % Get image dimensions
-    [height, width, channels] = size(im);
+    [height, width, channels] = size(I);
 
     % Create grayscale version of input im
     if channels > 1
-        gray = rgb2gray(im);
-        imlab = rgb2lab(im);
+        Igray = im2single(rgb2gray(I));
+        Ilab = rgb2lab(I);
     else
         continue;
     end
     
-    % Create grid on which the SURFs will be calculated
-    gridStep = 5;
-    gridX = 1:gridStep:width;
-    gridY = 1:gridStep:height;
-    [x, y] = meshgrid(gridX, gridY);
-    gridLocations = [x(:), y(:)];
+    % SIFT
+    binSize = 8;
+    [frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', 8, 'FloatDescriptors');
     
-    numGridPoints = size(gridLocations, 1);
+    numGridPoints = size(frames, 2);
     labs = zeros(numGridPoints, 3);
     
     for j = 1:numGridPoints
-        labs(j,:) = imlab(gridLocations(j,2), gridLocations(j,1), :);
+        labs(j,:) = Ilab(frames(2, j), frames(1, j), :);
     end
     
-    allLabs = [allLabs; labs];
-    
-    % Extract all SURFs for the image
-    gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
-    surfs = extractFeatures(gray, gridPoints);
-    allSurfs = [allSurfs; surfs];
+    allLabs = [allLabs; labs];  
+    allSifts = [allSifts; descriptors'];
 end
 
+% allSifts = transpose(allSifts);
+
 delete(gcp);
-size(allSurfs)
-size(allLabs)
-modes = 64;
+whos
+modes = 32;
 
 % Order of calculations:
 % 0) SURFs are transformed using signed square rooting
@@ -64,17 +58,17 @@ modes = 64;
 % 4) GMMs are computed on data from 3)
 
 % Step 0
-allSurfs = ssrt(allSurfs);
+% allSifts = ssrt(allSifts);
 
 % Step 1
 % Compute pca for surfs
-fprintf('Computing pca for surfs\n');
+fprintf('Computing pca for sifts\n');
 tic;
-[U, S, avg] = pca(allSurfs);
+[U, S, avg] = pca(allSifts);
 toc;
-surfPca.avg = avg;
-surfPca.U = U;
-surfPca.S = S;
+siftPca.avg = avg;
+siftPca.U = U;
+siftPca.S = S;
 
 % Compute pca for labs
 fprintf('Computing pca for labs\n');
@@ -86,16 +80,16 @@ labPca.U = U;
 labPca.S = S;
 
 % Step 2 and 3
-allSurfs = pcaw(allSurfs, surfPca);
+allSifts = pcaw(allSifts, siftPca);
 allLabs = pcaw(allLabs, labPca);
 
 % Step 4
 % Fit gmm to surfs
-fprintf('Fitting gmm to surfs\n');
-tic;[means, covariances, priors] = vl_gmm(allSurfs', modes);toc;
-surfGmm.means = means;
-surfGmm.covariances = covariances;
-surfGmm.priors = priors;
+fprintf('Fitting gmm to sifts\n');
+tic;[means, covariances, priors] = vl_gmm(allSifts', modes);toc;
+siftGmm.means = means;
+siftGmm.covariances = covariances;
+siftGmm.priors = priors;
 clear allSurfs;
 
 % Fit gmm to labs
@@ -106,6 +100,6 @@ labGmm.covariances = covariances;
 labGmm.priors = priors;
 clear allLabs;
 
-params = struct('labGmm', labGmm, 'labPca', labPca, 'surfGmm', surfGmm, 'surfPca', surfPca);
+params = struct('labGmm', labGmm, 'labPca', labPca, 'siftGmm', siftGmm, 'siftPca', siftPca);
 
 end
