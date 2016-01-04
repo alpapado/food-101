@@ -1,18 +1,26 @@
-params = calcGlobalParams();
+params = matfile('params.mat', 'Writable', true);
+params.nTrees = 10;
+params.treeSamples = 100000;
+params.nComponents = 20;
+params.nClasses = 101;
+params.modes = 32;
+params.featureType = 'sift';
+params.encodingLength = 2*128*params.modes + 2*3*params.modes;
+
+% encParams = calcGlobalParams(params.modes);
+% save('params.mat', '-append', '-struct', 'encParams');
+
+params = load('params.mat');
+
+load('classes.mat', 'classes');
 total = segmentDataset('data/images', classes, params);
-trees = randomForest(10, 100000);
+trees = randomForest(params);
 
 load('trees.mat');
 load('vset', 'vset');
-load('classes.mat', 'classes');
-load('metrics');
 
 leaves = cell2mat(extractfield(trees, 'leaves'));
-numComponents = 20;
-numClasses = length(classes);
-numTrees = length(trees);
 
-params = struct('numTrees', numTrees, 'numClasses', numClasses, 'numComponents', numComponents);
 metrics = leafMetrics( leaves, params );
 save('metrics.mat', 'metrics');
 

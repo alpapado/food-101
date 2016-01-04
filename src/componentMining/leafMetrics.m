@@ -27,11 +27,11 @@ function [classConf, classDist, delta] = classConfidence(leaves, params)
 % delta(l,s) : Auxilliary variable that indicates presence or not of sample
 % s in leaf l
 
-nTrees = params.numTrees;
-nClasses = params.numClasses;
+nTrees = params.nTrees;
+nClasses = params.nClasses;
 
-numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
-classConf = single(zeros(nClasses, numSamples));
+nSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
+classConf = single(zeros(nClasses, nSamples));
 
 classDist = classDistribution(leaves, nClasses);
 delta = computeDeltas(leaves, nTrees);
@@ -39,7 +39,7 @@ delta = computeDeltas(leaves, nTrees);
 fprintf('Calculating class confidence...');
 tic;
 parfor y = 1:nClasses
-    for s = 1:numSamples
+    for s = 1:nSamples
         classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
     end
 end
@@ -87,7 +87,7 @@ function distinct = distinctiveness(leaves, classConf, delta, params)
 %   confidence score.
 
 nLeaves = size(leaves, 2);
-nClasses = params.numClasses;
+nClasses = params.nClasses;
 
 distinct = single(zeros(nLeaves, nClasses));
 

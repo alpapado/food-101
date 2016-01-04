@@ -1,4 +1,4 @@
-function [ vset, vind ] = sampleValidationSet( m, n )
+function [ vset, vind ] = sampleValidationSet( m, n, l )
 %sampleValidationSet Samples n samples from file m, to be used as
 %validation
 %   vset: Validation set
@@ -8,7 +8,7 @@ function [ vset, vind ] = sampleValidationSet( m, n )
 fprintf('Generating validation set...');
 info = whos(m, 'classIndex');
 vind = uint32(randi([1 info.size(1)], n, 1));
-features = single(zeros(n, 8576));
+features = single(zeros(n, l));
 classIndex = uint8(zeros(n, 1));
 
 parfor i = 1:length(vind)

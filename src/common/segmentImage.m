@@ -15,7 +15,7 @@ imlab = vl_xyz2lab(vl_rgb2xyz(image));
 % Compute the segmentation
 % Add one to the result in order to start the superpixel indexing from one
 % instead of zero
-segments = vl_slic(single(imlab), regionSize, regularizer, 'MinRegionSize', (1/3 * regionSize) ^ 2) + 1;
+segments = vl_slic(single(imlab), regionSize, regularizer, 'MinRegionSize', (1/2 * regionSize) ^ 2) + 1;
 
 end
 

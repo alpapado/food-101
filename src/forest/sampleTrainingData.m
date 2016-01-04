@@ -1,11 +1,11 @@
-function trset = sampleTrainingData(m, n, v)
+function trset = sampleTrainingData(m, n, l, v)
 %sampleTrainingData Samples n random superpixels to be used for training
 %set in the growth of a tree.
 %   Samples n random entries from the data structure that contains the
 %   entire dataset's superpixels in fisher encoding
 
 % Preallocate space for result
-features = single(zeros(n, 8576));
+features = single(zeros(n, l));
 classIndex = uint8(zeros(n, 1));
 
 % Generate random seed

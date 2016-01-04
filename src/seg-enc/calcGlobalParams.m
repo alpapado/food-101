@@ -1,4 +1,4 @@
-function params = calcGlobalParams()
+function params = calcGlobalParams(modes)
 %calcGlobalParams Calculate a gmm and a pca representation of the data
 %   Detailed explanation goes here
 [~, w] = unix('find data/images -name "*jpg"');
@@ -44,11 +44,8 @@ parfor i = 1:length(ind)
     allSifts = [allSifts; descriptors'];
 end
 
-% allSifts = transpose(allSifts);
-
 delete(gcp);
 whos
-modes = 32;
 
 % Order of calculations:
 % 0) SURFs are transformed using signed square rooting
