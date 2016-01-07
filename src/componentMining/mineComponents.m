@@ -9,8 +9,8 @@ function components = mineComponents(leaves, metrics, vset, params)
 %   act as negative. In addition, iterative hard-negative mining is
 %   performed in order to speed up the process.
 
-nClasses = params.numClasses;
-nComponents = params.numComponents;
+nClasses = params.nClasses;
+nComponents = params.nComponents;
 components(nClasses, nComponents) = struct('svm', []);
 
 

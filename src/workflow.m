@@ -1,10 +1,13 @@
+load('classes.mat', 'classes');
 params = matfile('params.mat', 'Writable', true);
-params.nTrees = 10;
+params.classes = classes;
+params.nTrees = 1;
 params.treeSamples = 100000;
 params.nComponents = 20;
 params.nClasses = 101;
-params.featureType = 'surf';
+params.featureType = 'sift';
 params.gridStep = 5;
+params.pyramidLevels = 3;
 
 if strcmp(params.featureType, 'sift')
     params.featureLength = 128;
@@ -16,14 +19,13 @@ end
 
 params.encodingLength = 2*params.featureLength*params.modes + 2*3*params.modes;
 
-% encParams = calcGlobalParams(params);
-% save('params.mat', '-append', '-struct', 'encParams');
+encParams = calcGlobalParams(params);
+save('params.mat', '-append', '-struct', 'encParams');
 
 params = load('params.mat');
 params
 
-load('classes.mat', 'classes');
-%total = segmentDataset('data/images', classes, params);
+total = segmentDataset('data/images', classes, params);
 trees = randomForest(params);
 
 load('trees.mat');
@@ -37,7 +39,7 @@ save('metrics.mat', 'metrics');
 models = mineComponents(leaves, metrics, vset, params); 
 save('components.mat', 'models');
 
-trainFinalClassifier();
+trainFinalClassifier(params);
 clear;
 
 load('train.mat');

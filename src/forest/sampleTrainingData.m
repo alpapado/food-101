@@ -28,9 +28,8 @@ parfor i = 1:n
 
         features(i,:) = m.features(randInd, :);
         classIndex(i) = m.classIndex(randInd, 1);
-    catch
-%         size(features)
-        size(m.features(randInd, :))
+    catch ME 
+        disp(getReport(ME,'extended'));
     end
 end
 delete(gcp);

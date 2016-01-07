@@ -25,7 +25,7 @@ parfor i = 1:length(ind)
 
     % Create grayscale version of input im
     if channels > 1
-        Igray = im2single(rgb2gray(I));
+        Igray = rgb2gray(I);
         Ilab = rgb2lab(I);
     else
         continue;
@@ -34,7 +34,7 @@ parfor i = 1:length(ind)
     % SIFT
     if strcmp(params.featureType, 'sift')
         binSize = 8;
-        [frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
+        [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
         frames = transpose(frames);
         descriptors = transpose(descriptors);
         numGridPoints = size(frames, 1);

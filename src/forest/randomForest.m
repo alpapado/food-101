@@ -9,10 +9,9 @@ n = params.treeSamples;
 l = params.encodingLength;
 m = matfile('data.mat');
 
-%[vset, vind] = sampleValidationSet(m, n, l); 
-%save('vset.mat', 'vset', 'vind');
-%clear vset
-%nTrees=1;
+% [vset, vind] = sampleValidationSet(m, n, l); 
+% save('vset.mat', 'vset', 'vind');
+% clear vset
 
 for i = 1:nTrees
     load('vset.mat', 'vind');
@@ -22,8 +21,7 @@ for i = 1:nTrees
         
         % Sample training set
         trset = sampleTrainingData(m, n, l, vind);
-%        save(['tr' num2str(i) '.mat'], 'trset');
-        
+
         % Train tree
         % Root node contains the entire training set
         rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trset, 'classIndex'));
