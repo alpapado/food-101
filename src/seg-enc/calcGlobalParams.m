@@ -26,7 +26,8 @@ parfor i = 1:length(ind)
     % Create grayscale version of input im
     if channels > 1
         Igray = rgb2gray(I);
-        Ilab = rgb2lab(I);
+%         Ilab = rgb2lab(I);
+        Ilab = vl_xyz2lab(vl_rgb2xyz(I));
     else
         continue;
     end     
