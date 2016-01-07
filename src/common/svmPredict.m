@@ -15,7 +15,8 @@ function [predictions, scores] = svmPredict(models, X)
 % end
 
 nModels = length(models);
-m = size(X, 1);
+m = size(X,1);
+n = size(X,2);
 
 if nModels == 1
     % If we have only one model
@@ -36,7 +37,7 @@ if nModels == 1
 else 
     % If we have multiple models, we can perform prediction for all of them
     % efficiently using again matrix multiplication
-    W = reshape(extractfield(models, 'w'), [2*64*64 + 2*3*64 nModels]);
+    W = reshape(extractfield(models, 'w'), [n nModels]);
     p = X * W;
     scores = p;
     predictions = zeros(m, nModels);

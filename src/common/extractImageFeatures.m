@@ -13,7 +13,7 @@ features = zeros(numSuperpixels, params.encodingLength);
 
 % Create grayscale version of input image
 if channels > 1
-    Igray = im2single(rgb2gray(image));
+    Igray = rgb2gray(image);
 else
     Igray = image;
 end
@@ -24,7 +24,7 @@ modes = params.modes;
 % SIFT
 if strcmp(params.featureType, 'sift')
     binSize = 8;
-    [frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
+    [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
 
     frames = transpose(frames);
     descriptors = transpose(descriptors);
@@ -73,11 +73,22 @@ for i = 1:numSuperpixels
         % Step 0
         tempFeatures = descriptors(spPoints, :);
 
-        poi = uint8(zeros(length(spPoints), 3)); % Image region whose lab values to compute
+        % original code
+%         poi = uint8(zeros(length(spPoints), 3)); 
+
+%       Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
+        poi = uint8(zeros(length(spPoints), 1, 3)); % Image region whose lab values to compute
+        
         for j = 1:length(spPoints)
-            poi(j,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
+            poi(j,1,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
+            
+            % original code
+%             poi(j,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
         end
-        LABs = rgb2lab(poi);
+%         LABs = rgb2lab(poi);
+
+%       Now squeeze out the singleton
+        LABs = squeeze(vl_xyz2lab(vl_rgb2xyz(poi)));
 
         % Step 1 and 2
         featureEncoding = ifvEncode(pcaw(tempFeatures, params.featurePca), params.featureGmm);

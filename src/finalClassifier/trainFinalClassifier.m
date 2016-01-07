@@ -1,12 +1,7 @@
-function trainFinalClassifier()
+function trainFinalClassifier(params)
 % Read class labels from file
-load('classes.mat', 'classes');
-load('components.mat');
-load('encoding_params.mat');
-pyramidLevels = 3;
-params.pyramidLevels = pyramidLevels;
-params.classes = classes; 
-components = models;
+pyramidLevels = params.pyramidLevels;
+components = params.models;
 [X, y] = encodeImageSet('train', components, params);
 save('train.mat', 'X', 'y');
 clear X y
