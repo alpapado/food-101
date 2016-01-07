@@ -3,46 +3,60 @@ function trees = randomForest(params)
 %   numTrees : Number of trees in forest
 %   n : Number of training data for a tree
 nTrees = params.nTrees;
-n = params.treeSanples;
-l = params.encodingLength;
 trees(nTrees) = struct('tree', [], 'leaves', []);
+
+n = params.treeSamples;
+l = params.encodingLength;
 m = matfile('data.mat');
 
-[vset, vind] = sampleValidationSet(m, n, l); 
-save('vset.mat', 'vset', 'vind');
+%[vset, vind] = sampleValidationSet(m, n, l); 
+%save('vset.mat', 'vset', 'vind');
+%clear vset
+%nTrees=1;
 
 for i = 1:nTrees
-    fprintf('Tree %d\n', i);
+    load('vset.mat', 'vind');
     
-    % Sample training set
-    trset = sampleTrainingData(m, n, l, vind);
-    
-    % Train tree
-    % Root node contains the entire training set
-    rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trset, 'classIndex'));
-    root = struct('trData', rootTrData, 'cvData', [], 'svm', []); % Set root node
-    rtree = tree(root);
-    rtree = randomTree(rtree, 1, trset); % Grow starting from 2nd node
-    clear trset
-    
-    % Classify validation set using previously trained tree
-    fprintf('Classifing validation set using tree\n');
-    rtree = treeClassify(rtree, vset);
-    
-    % Extract leaves
-    leafIndices = rtree.findleaves();
-    leaves = struct('trData', [], 'cvData', []);
-    
-    for l = 1:length(leafIndices)
-        leaf = rtree.get(leafIndices(l));
-        leaves(l).trData = leaf.trData;
-        leaves(l).cvData = leaf.cvData;
+    try
+        fprintf('Tree %d\n', i);
+        
+        % Sample training set
+        trset = sampleTrainingData(m, n, l, vind);
+%        save(['tr' num2str(i) '.mat'], 'trset');
+        
+        % Train tree
+        % Root node contains the entire training set
+        rootTrData = struct('trainingIndex', 1:n, 'classIndex', extractfield(trset, 'classIndex'));
+        root = struct('trData', rootTrData, 'cvData', [], 'svm', []); % Set root node
+        rtree = tree(root);
+        rtree = randomTree(rtree, 1, trset); % Grow starting from 2nd node
+        clear trset
+
+        % Classify validation set using previously trained tree
+        fprintf('Classifing validation set using tree\n');
+        load('vset.mat', 'vset');
+        rtree = treeClassify(rtree, vset);
+        clear vset vind
+
+        % Extract leaves
+        leafIndices = rtree.findleaves();
+        leaves = struct('trData', [], 'cvData', []);
+
+        for l = 1:length(leafIndices)
+            leaf = rtree.get(leafIndices(l));
+            leaves(l).trData = leaf.trData;
+            leaves(l).cvData = leaf.cvData;
+        end
+
+        trees(i).tree = rtree;
+        trees(i).leaves = leaves;
+
+        save('trees', 'trees');
+    catch ME
+        disp(getReport(ME,'extended'));
+        pause
     end
-    
-    trees(i).tree = rtree;
-    trees(i).leaves = leaves;
-    
-    save('trees', 'trees');
+
 end
 
 

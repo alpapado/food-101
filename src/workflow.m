@@ -3,17 +3,27 @@ params.nTrees = 10;
 params.treeSamples = 100000;
 params.nComponents = 20;
 params.nClasses = 101;
-params.modes = 32;
-params.featureType = 'sift';
-params.encodingLength = 2*128*params.modes + 2*3*params.modes;
+params.featureType = 'surf';
+params.gridStep = 5;
 
-% encParams = calcGlobalParams(params.modes);
+if strcmp(params.featureType, 'sift')
+    params.featureLength = 128;
+    params.modes = 32;
+elseif strcmp(params.featureType, 'surf')
+    params.featureLength = 64;
+    params.modes = 64;
+end
+
+params.encodingLength = 2*params.featureLength*params.modes + 2*3*params.modes;
+
+% encParams = calcGlobalParams(params);
 % save('params.mat', '-append', '-struct', 'encParams');
 
 params = load('params.mat');
+params
 
 load('classes.mat', 'classes');
-total = segmentDataset('data/images', classes, params);
+%total = segmentDataset('data/images', classes, params);
 trees = randomForest(params);
 
 load('trees.mat');

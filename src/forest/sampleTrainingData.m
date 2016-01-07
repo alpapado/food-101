@@ -20,13 +20,18 @@ info = whos(m, 'classIndex');
 
 fprintf('Generating training set...');
 parfor i = 1:n
-    randInd = randi([1 info.size(1)], 1, 1);
-    while ismember(randInd, v)
+    try
         randInd = randi([1 info.size(1)], 1, 1);
+        while ismember(randInd, v)
+            randInd = randi([1 info.size(1)], 1, 1);
+        end
+
+        features(i,:) = m.features(randInd, :);
+        classIndex(i) = m.classIndex(randInd, 1);
+    catch
+%         size(features)
+        size(m.features(randInd, :))
     end
-    
-    features(i,:) = m.features(randInd, :);
-    classIndex(i) = m.classIndex(randInd, 1);
 end
 delete(gcp);
 trset = struct('features', features, 'classIndex', classIndex);

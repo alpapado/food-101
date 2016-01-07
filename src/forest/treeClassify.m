@@ -17,7 +17,7 @@ for n = iterator
         continue;
     end
   
-    node = rtree.get(n);
+    node = rtree.get(n);    
     model = node.svm;
         
     cvDataIndices = extractfield(node.cvData, 'validationIndex');
@@ -30,6 +30,12 @@ for n = iterator
     children = rtree.getchildren(n);
     leftId = children(1);
     rightId = children(2);
+    
+%     n
+%     node.cvData
+%     size(cvLeft)
+%     size(cvRight)
+%     pause
     
     % Assign cv data of children
     if ~isempty(cvLeft)

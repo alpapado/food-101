@@ -18,57 +18,72 @@ else
     Igray = image;
 end
 
-% SIFT
-binSize = 8;
-[frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', 6, 'FloatDescriptors');
+gridStep = params.gridStep;
+modes = params.modes;
 
-% Get valid points' locations
-% frames = frames;
-nFrames = size(frames, 2);
-        
+% SIFT
+if strcmp(params.featureType, 'sift')
+    binSize = 8;
+    [frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
+
+    frames = transpose(frames);
+    descriptors = transpose(descriptors);
+    
+elseif strcmp(params.featureType, 'surf')
+    % Create grid on which the SURFs will be calculated
+    gridX = 1:gridStep:width;
+    gridY = 1:gridStep:height;
+    [x, y] = meshgrid(gridX, gridY);
+    gridLocations = [x(:), y(:)];
+
+    gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
+    [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
+
+    frames = validPoints.Location;
+    
+end
+
+% whos
+
+nFrames = size(frames, 1);
+
 % For every superpixel
 for i = 1:numSuperpixels
     s = spIndices(i); % Superpixel index
     % Find spixel points and encode the surfs along with the lab values in
     % these points
-    
-%     markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-%     J = step(markerInserter, label2rgb(segments==s), int32(frames'));
-%     imshow(J);
-%     pause
     spPoints = uint32(zeros(nFrames, 1)); % Indexes into validPointsLocation matrix
     k = 1;
-    
+
     for j = 1:nFrames
-        if segments(frames(2, j), frames(1, j)) == s
+        if segments(frames(j,2), frames(j,1)) == s
             spPoints(k) = j;
             k = k + 1;
         end
     end
     spPoints(spPoints == 0) = [];
 
-    modes = params.modes;
     if length(spPoints) >= modes
-        
+
         % Order of calculations:
         % 0) SURFs are transformed using signed square rooting
         % 1) Data is pca whitened
         % 2) PCA whitened data is ifv encoded
-        
+
         % Step 0
-        SIFTs = descriptors(:, spPoints);
-        
+        tempFeatures = descriptors(spPoints, :);
+
         poi = uint8(zeros(length(spPoints), 3)); % Image region whose lab values to compute
         for j = 1:length(spPoints)
-            poi(j,:) = image(frames(2, spPoints(j)), frames(1, spPoints(j)), :);
+            poi(j,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
         end
         LABs = rgb2lab(poi);
-        
+
         % Step 1 and 2
-        siftsEncoding = ifvEncode(pcaw(SIFTs', params.siftPca), params.siftGmm);
+        featureEncoding = ifvEncode(pcaw(tempFeatures, params.featurePca), params.featureGmm);
         labEncoding = ifvEncode(pcaw(LABs, params.labPca), params.labGmm);
-        features(i, :) = [siftsEncoding; labEncoding];
-              
+        features(i, :) = [featureEncoding; labEncoding];
+
     else
 %         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
 %         J = step(markerInserter, label2rgb(segments==s), int32(transpose(frames(:, spPoints))));
@@ -83,7 +98,7 @@ for i = 1:numSuperpixels
         continue;
     end
 end
-
+    
 end
 
 function encoding = ifvEncode(data, gmm)

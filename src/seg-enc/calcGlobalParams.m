@@ -1,4 +1,4 @@
-function params = calcGlobalParams(modes)
+function params = calcGlobalParams(params)
 %calcGlobalParams Calculate a gmm and a pca representation of the data
 %   Detailed explanation goes here
 [~, w] = unix('find data/images -name "*jpg"');
@@ -6,13 +6,15 @@ list = strsplit(w, '\n'); % list of image encodings
 list(end) = []; % last is empty
 
 ind = randi([1 length(list)], 1000, 1);
-allSifts = [];
+allFeatures = [];
 allLabs = [];
 
-siftGmm = struct('means', [], 'covariances', [], 'priors', []);
+featureGmm = struct('means', [], 'covariances', [], 'priors', []);
 labGmm = struct('means', [], 'covariances', [], 'priors', []);
-siftPca = struct('avg', [], 'U', [], 'S', []);
+featurePca = struct('avg', [], 'U', [], 'S', []);
 labPca = struct('avg', [], 'U', [], 'S', []);
+% gridStep = params.gridStep;
+gridStep = 8;
 
 parfor i = 1:length(ind)
     i
@@ -27,21 +29,40 @@ parfor i = 1:length(ind)
         Ilab = rgb2lab(I);
     else
         continue;
-    end
+    end     
     
     % SIFT
-    binSize = 8;
-    [frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', 8, 'FloatDescriptors');
-    
-    numGridPoints = size(frames, 2);
-    labs = zeros(numGridPoints, 3);
-    
-    for j = 1:numGridPoints
-        labs(j,:) = Ilab(frames(2, j), frames(1, j), :);
+    if strcmp(params.featureType, 'sift')
+        binSize = 8;
+        [frames, descriptors] = vl_dsift(Igray, 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
+        frames = transpose(frames);
+        descriptors = transpose(descriptors);
+        numGridPoints = size(frames, 1);
+        
+    elseif strcmp(params.featureType, 'surf')
+        % Create grid on which the SURFs will be calculated
+        gridX = 1:gridStep:width;
+        gridY = 1:gridStep:height;
+        [x, y] = meshgrid(gridX, gridY);
+        gridLocations = [x(:), y(:)];
+
+        gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
+        [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
+
+        % Get valid points' locations
+        frames = validPoints.Location;
+        numGridPoints = size(validPoints, 1);
+        
     end
-    
+
+    labs = zeros(numGridPoints, 3);
+
+    for j = 1:numGridPoints
+        labs(j,:) = Ilab(frames(j,2), frames(j,1), :);
+    end
     allLabs = [allLabs; labs];  
-    allSifts = [allSifts; descriptors'];
+    allFeatures = [allFeatures; descriptors];
+
 end
 
 delete(gcp);
@@ -56,16 +77,17 @@ whos
 
 % Step 0
 % allSifts = ssrt(allSifts);
+modes = params.modes;
 
 % Step 1
 % Compute pca for surfs
-fprintf('Computing pca for sifts\n');
+fprintf('Computing pca for features\n');
 tic;
-[U, S, avg] = pca(allSifts);
+[U, S, avg] = pca(allFeatures);
 toc;
-siftPca.avg = avg;
-siftPca.U = U;
-siftPca.S = S;
+featurePca.avg = avg;
+featurePca.U = U;
+featurePca.S = S;
 
 % Compute pca for labs
 fprintf('Computing pca for labs\n');
@@ -77,16 +99,16 @@ labPca.U = U;
 labPca.S = S;
 
 % Step 2 and 3
-allSifts = pcaw(allSifts, siftPca);
+allFeatures = pcaw(allFeatures, featurePca);
 allLabs = pcaw(allLabs, labPca);
 
 % Step 4
 % Fit gmm to surfs
-fprintf('Fitting gmm to sifts\n');
-tic;[means, covariances, priors] = vl_gmm(allSifts', modes);toc;
-siftGmm.means = means;
-siftGmm.covariances = covariances;
-siftGmm.priors = priors;
+fprintf('Fitting gmm to features\n');
+tic;[means, covariances, priors] = vl_gmm(allFeatures', modes);toc;
+featureGmm.means = means;
+featureGmm.covariances = covariances;
+featureGmm.priors = priors;
 clear allSurfs;
 
 % Fit gmm to labs
@@ -97,6 +119,6 @@ labGmm.covariances = covariances;
 labGmm.priors = priors;
 clear allLabs;
 
-params = struct('labGmm', labGmm, 'labPca', labPca, 'siftGmm', siftGmm, 'siftPca', siftPca);
+params = struct('labGmm', labGmm, 'labPca', labPca, 'featureGmm', featureGmm, 'featurePca', featurePca);
 
 end
