@@ -28,9 +28,6 @@ function rtree = randomTree(rtree, parentId, trset )
 
 fprintf('Node %d...', parentId);
 
-% Node fields
-field1 = 'trData'; field2 = 'cvData'; field3 = 'svm';
-
 % Calculate the splits
 parent = rtree.get(parentId);
 tic;
@@ -41,11 +38,11 @@ parent.svm = svm;
 rtree = rtree.set(parentId, parent);
 
 % Set left node
-leftNode = struct(field1, left, field2, [], field3, []);
+leftNode = struct('trData', left, 'cvData', [], 'svm', []);
 [rtree, newNodeLeftId] = rtree.addnode(parentId, leftNode);
 
 % Set right node
-rightNode = struct(field1, right, field2, [], field3, []);
+rightNode = struct('trData', right, 'cvData', [], 'svm', []);
 [rtree, newNodeRightId] = rtree.addnode(parentId, rightNode);
 
 % FOR DEBUGGING PURPOSES
@@ -78,7 +75,7 @@ function stop = stopGrowing(trset, trsetInd, tree, nodeId)
 %
 
 stop = false;
-maxDepth = 5;
+maxDepth = 7;
 minSamples = 25;
 
 % Check condition #1

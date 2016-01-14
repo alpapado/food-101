@@ -30,7 +30,8 @@ function [classConf, classDist, delta] = classConfidence(leaves, params)
 nTrees = params.nTrees;
 nClasses = params.nClasses;
 
-nSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
+% nSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
+nSamples = params.treeSamples;
 classConf = single(zeros(nClasses, nSamples));
 
 classDist = classDistribution(leaves, nClasses);
@@ -40,7 +41,8 @@ fprintf('Calculating class confidence...');
 tic;
 parfor y = 1:nClasses
     for s = 1:nSamples
-        classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
+%         classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
+        classConf(y,s) = classDist(y,:) * single(delta(:,s));
     end
 end
 
@@ -58,7 +60,7 @@ function classDist = classDistribution( leaves, nClasses )
 %  classDist : The class distributions of all the leaves
 fprintf('Calculating class distributions...');
 tic;
-nLeaves = size(leaves, 2);
+nLeaves = length(leaves);
 classDist = single(zeros(nClasses, nLeaves));
 
 for l = 1:nLeaves
@@ -97,6 +99,7 @@ tic;
 parfor y = 1:nClasses
     for l = 1:nLeaves
         distinct(l,y) = sum( single(delta(l,:)) .* classConf(y,:) );
+%         distinct(l,y) = classConf(y,:) * single(delta(l,:))';
     end 
 end
 

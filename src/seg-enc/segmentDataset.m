@@ -1,4 +1,4 @@
-function total = segmentDataset(datasetPath, classes, params)
+function total = segmentDataset(params)
 %segmentDataset Performs segmentation on the food-101 dataset and saves
 %the results
 % INPUTS:
@@ -12,10 +12,11 @@ total = 0;
 all = matfile('data.mat', 'Writable', true);
 all.features = single(zeros(1, params.encodingLength));
 all.classIndex = uint8(zeros(1, 1));
+classes = params.classes;
 
 for c = 1:length(classes)
     currentClass = num2str(cell2mat(classes(c)));
-    imageFolder = [datasetPath '/' currentClass];
+    imageFolder = [params.datasetPath '/' currentClass];
     classImages = dir([imageFolder '/*jpg']);
     tempFeatures = [];
     tempLabels = [];

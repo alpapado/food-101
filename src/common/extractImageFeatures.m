@@ -97,7 +97,7 @@ for i = 1:numSuperpixels
 
     else
 %         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-%         J = step(markerInserter, label2rgb(segments==s), int32(transpose(frames(:, spPoints))));
+%         J = step(markerInserter, label2rgb(segments==s), int32(frames(spPoints,:)));
 %         imshow(J);
 %         pause
        fid = fopen('error.txt', 'a');

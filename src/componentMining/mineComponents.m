@@ -77,7 +77,7 @@ function model = hardNegativeMining(X, y, iterations)
     positives = find(y==1);
     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
    
-    imbalance = randi([250 500], 1, 1);
+    imbalance = randi([50 150], 1, 1);
     
     negativesToKeep = negatives(1:length(positives) + imbalance);
     

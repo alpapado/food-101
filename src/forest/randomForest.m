@@ -9,9 +9,11 @@ n = params.treeSamples;
 l = params.encodingLength;
 m = matfile('data.mat');
 
-% [vset, vind] = sampleValidationSet(m, n, l); 
-% save('vset.mat', 'vset', 'vind');
-% clear vset
+if ~exist('vset.mat', 'file')
+    [vset, vind] = sampleValidationSet(m, n, l); 
+    save('vset.mat', 'vset', 'vind');
+    clear vset
+end
 
 for i = 1:nTrees
     load('vset.mat', 'vind');
