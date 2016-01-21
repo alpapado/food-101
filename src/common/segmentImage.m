@@ -4,7 +4,9 @@ function segments = segmentImage(image)
 %   segments: The produced segments by the SLIC algorithm
 
 % Calculate region size
-regionSize = round(max(size(image)) * 0.3);
+[height, width, channels] = size(image);
+% regionSize = round(max(size(image)) * 0.2);
+regionSize = round( (height + width) * 0.2 / 2);
 
 % Calculate regularizer
 regularizer = 0.1;
@@ -15,7 +17,7 @@ imlab = vl_xyz2lab(vl_rgb2xyz(image));
 % Compute the segmentation
 % Add one to the result in order to start the superpixel indexing from one
 % instead of zero
-segments = vl_slic(single(imlab), regionSize, regularizer, 'MinRegionSize', (1/2 * regionSize) ^ 2) + 1;
-
+segments = vl_slic(single(imlab), regionSize, regularizer, 'MinRegionSize', (1/10 * regionSize) ^ 2) + 1;
+% segments = vl_slic(single(imlab), regionSize, regularizer) + 1;
 end
 

@@ -6,3 +6,6 @@ vlfeat/*
 done/*
 error.txt
 *mexa64
+fast_sc/*
+GraphSeg/*
+spams-matlab/*

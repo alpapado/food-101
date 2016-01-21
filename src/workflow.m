@@ -9,6 +9,7 @@ params.featureType = 'sift';
 params.gridStep = 5;
 params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
+params.numBases = 512;
 
 if strcmp(params.featureType, 'sift')
     params.featureLength = 128;
@@ -19,14 +20,14 @@ elseif strcmp(params.featureType, 'surf')
 end
 
 params.encodingLength = 2*params.featureLength*params.modes + 2*3*params.modes;
-
+params.encodingLength = params.numBases;
 % encParams = calcGlobalParams(params);
 % save('params.mat', '-append', '-struct', 'encParams');
 
 params = load('params.mat');
 params
 
-% total = segmentDataset(params);
+total = segmentDataset(params);
 trees = randomForest(params);
 
 load('trees.mat');

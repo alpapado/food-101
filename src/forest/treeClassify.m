@@ -31,8 +31,8 @@ for n = iterator
         leftId = children(1);
         rightId = children(2);
 
-        fprintf('Node %d has %d\n', n, length(cvDataIndices));
-        fprintf('%d go to left (%d)- %d go to right(%d)\n', length(cvLeft), leftId, length(cvRight), rightId);
+%         fprintf('Node %d has %d\n', n, length(cvDataIndices));
+%         fprintf('%d go to left (%d)- %d go to right(%d)\n', length(cvLeft), leftId, length(cvRight), rightId);
 
         % Assign cv data of children
         if ~isempty(cvLeft)
@@ -50,11 +50,6 @@ for n = iterator
         end
     catch ME
         disp(getReport(ME,'extended'));
-        n
-        node
-        model
-        node.cvData
-        pause;
     end
 end
 
