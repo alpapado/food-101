@@ -1,12 +1,12 @@
 load('classes.mat', 'classes');
 params = matfile('params.mat', 'Writable', true);
 params.classes = classes;
-params.nTrees = 20;
+params.nTrees = 30;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
 params.featureType = 'sift';
-params.gridStep = 5;
+params.gridStep = 8;
 params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
 params.numBases = 512;

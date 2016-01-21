@@ -1,21 +1,21 @@
-function features = extractImageFeatures2(image, segments, params)
+function features = extractImageFeatures2(I, L, params)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
 
 % Preallocate space for result
-spIndices = unique(segments); % Superpixel indices are not always sequential
+spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
 features = zeros(numSuperpixels, params.encodingLength);
 
 % Get image dimensions
 % Height is first ;( ;( ;(
-[height, width, channels] = size(image);
+[height, width, channels] = size(I);
 
 % Create grayscale version of input image
 if channels > 1
-    Igray = rgb2gray(image);
+    Igray = rgb2gray(I);
 else
-    Igray = image;
+    Igray = I;
 end
 
 gridStep = params.gridStep;
@@ -53,58 +53,59 @@ ompParam.eps=0.1; % squared norm of the residual should be less than 0.1
 ompParam.numThreads=-1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
 S = full(mexOMP(X, params.B, ompParam));
 
-Xhat = params.B * S;
-for i = 1:size(X, 2)
-   plot(1:size(X,1), X(:,i), 'r', 1:size(X,1), Xhat(:,i), 'b');
-   sum(S(:,i)~=0)
-   title(sprintf('%d non zero activations', ompParam.L));
-   legend('X', 'Xhat');
-   pause;
-end
+% Xhat = params.B * S;
+% for i = 1:size(X, 2)
+%    plot(1:size(X,1), X(:,i), 'r', 1:size(X,1), Xhat(:,i), 'b');
+%    sum(S(:,i)~=0)
+%    title(sprintf('%d non zero activations', ompParam.L));
+%    legend('X', 'Xhat');
+%    pause;
+% end
 
 nFrames = size(frames, 1);
 
 % For every superpixel
 for i = 1:numSuperpixels
-    s = spIndices(i); % Superpixel index
-    % Find spixel points
-    spPoints = uint32(zeros(nFrames, 1));
-    k = 1;
+    
+    try
+        % Superpixel index
+        s = spIndices(i);
 
-    for j = 1:nFrames
-        if segments(frames(j,2), frames(j,1)) == s
-            spPoints(k) = j;
-            k = k + 1;
+        % Find spixel points
+        spPoints = uint32(zeros(nFrames, 1));
+        k = 1;
+
+        for j = 1:nFrames
+            if L(frames(j,2), frames(j,1)) == s
+                spPoints(k) = j;
+                k = k + 1;
+            end
         end
+        spPoints(spPoints == 0) = [];
+
+        if isempty(spPoints)
+            continue;
+        end
+        
+        spActivations = S(:, spPoints);
+
+        % Mean pooling
+    %     features(i, :) = mean(spActivations, 2);
+
+        % Max pooling
+        features(i, :) = max(spActivations, [], 2);
+    catch
+        Iseg = vl_imseg(im2double(I), L);
+         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
+        J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
+        subplot(1,2,1); subimage(J);
+        subplot(1,2,2); subimage(Iseg);
+        pause
     end
-    spPoints(spPoints == 0) = [];
-
-%     spFeatures = descriptors(spPoints, :);
-
-%   Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
-%     poi = uint8(zeros(length(spPoints), 1, 3)); % Image region whose lab values to compute
-% 
-%     for j = 1:length(spPoints)
-%         poi(j,1,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
-%     end
-
-%   Now squeeze out the singleton
-%     LABs = squeeze(vl_xyz2lab(vl_rgb2xyz(poi)));
-
-    spActivations = S(:, spPoints);
-    
-    % Mean pooling
-%     features(i, :) = mean(spActivations, 2);
-    
-    % Max pooling
-    features(i, :) = max(spActivations, [], 2);
-
-%     markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-%     J = step(markerInserter, label2rgb(segments   ), int32(frames(spPoints,:)));
-%     imshow(J);
-%     pause
-
+   
 end
+
+features( ~any(features,2), : ) = [];
     
 end
 

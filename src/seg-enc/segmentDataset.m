@@ -30,10 +30,9 @@ for c = 1:length(classes)
         
         try                     
             segments = segmentImage(image);        
-            features = extractImageFeatures(image, segments, params);           
+            features = extractImageFeatures2(image, segments, params);           
             tempFeatures = [tempFeatures; features];
-            tempLabels = [tempLabels; zeros(length(unique(segments)),1) + c];
-                   
+            tempLabels = [tempLabels; zeros(size(features,1),1) + c];
         catch ME          
             disp(getReport(ME,'extended'));       
         end
