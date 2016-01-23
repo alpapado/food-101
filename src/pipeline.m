@@ -28,7 +28,7 @@ params = load('params.mat');
 params
 
 % Segment and encode dataset
-% total = segmentDataset(params);
+total = segmentDataset(params);
 
 % Generate random seed
 [~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
@@ -38,7 +38,7 @@ seed = str2double(seed);
 rng(seed);
 
 % Grow forest
-%trees = randomForest(params);
+trees = randomForest(params);
 
 if ~exist('trees', 'var')
     load('trees.mat');
@@ -50,16 +50,19 @@ end
  
 leaves = cell2mat(extractfield(trees, 'leaves'));
 
+metrics = leafMetrics( leaves, params );
+save('metrics.mat', 'metrics');
+
 if ~exist('metrics', 'var')
     load metrics;
 end
-%metrics = leafMetrics( leaves, params );
-%save('metrics.mat', 'metrics');
 
-%models = mineComponents(leaves, metrics, vset, params);
-%params.models = models;
-%save('components.mat', 'models');
-%save('params.mat', '-struct', 'params');
+models = mineComponents(leaves, metrics, vset, params);
+params.models = models;
+save('components.mat', 'models');
+save('params.mat', '-struct', 'params');
+
+clear vset trees
 
 trainFinalClassifier(params);
 clear;

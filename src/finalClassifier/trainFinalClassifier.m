@@ -25,7 +25,6 @@ imgSet = images{1};
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
 nImages = length(imgSet);
-nImages = 100;
 
 [nClasses, nComponents] = size(components);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid

@@ -1,11 +1,16 @@
-function features = extractImageFeatures2(I, L, params)
+function [features, badSegments] = extractImageFeatures2(I, L, params, ignoreSmallSegments)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
+
+if ~exist('ignoreSmallSegments', 'var')
+    ignoreSmallSegments = true;
+end
 
 % Preallocate space for result
 spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
 features = zeros(numSuperpixels, params.encodingLength);
+badSegments = [];
 
 % Get image dimensions
 % Height is first ;( ;( ;(
@@ -84,6 +89,7 @@ for i = 1:numSuperpixels
         spPoints(spPoints == 0) = [];
 
         if isempty(spPoints)
+            badSegments = [badSegments; s];
             continue;
         end
         
@@ -96,7 +102,7 @@ for i = 1:numSuperpixels
         features(i, :) = max(spActivations, [], 2);
     catch
         Iseg = vl_imseg(im2double(I), L);
-         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
+        markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
         J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
         subplot(1,2,1); subimage(J);
         subplot(1,2,2); subimage(Iseg);
@@ -105,7 +111,9 @@ for i = 1:numSuperpixels
    
 end
 
-features( ~any(features,2), : ) = [];
+if ignoreSmallSegments == true
+    features( ~any(features,2), : ) = [];
+end
     
 end
 
