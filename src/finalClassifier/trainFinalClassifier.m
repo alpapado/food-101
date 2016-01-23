@@ -1,6 +1,5 @@
 function trainFinalClassifier(params)
-% Read class labels from file
-pyramidLevels = params.pyramidLevels;
+
 components = params.models;
 [X, y] = encodeImageSet('train', components, params);
 save('train.mat', 'X', 'y');
@@ -26,6 +25,7 @@ imgSet = images{1};
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
 nImages = length(imgSet);
+nImages = 100;
 
 [nClasses, nComponents] = size(components);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid

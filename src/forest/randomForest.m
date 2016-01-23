@@ -19,6 +19,7 @@ for i = 1:nTrees
     load('vset.mat', 'vind');
     
     try
+        t1 = tic;
         fprintf('Tree %d\n', i);
         
         % Sample training set
@@ -32,11 +33,11 @@ for i = 1:nTrees
         rtree = randomTree(rtree, 1, trset); % Grow starting from 2nd node
         clear trset
 
-        % Classify validation set using previously trained tree
-        fprintf('Classifing validation set using tree\n');
-        load('vset.mat', 'vset');
-        rtree = treeClassify(rtree, vset);
-        clear vset vind
+         % Classify validation set using previously trained tree
+         fprintf('Classifing validation set using tree\n');
+         load('vset.mat', 'vset');
+         rtree = treeClassify(rtree, vset);
+         clear vset vind
 
         % Extract leaves
         leafIndices = rtree.findleaves();
@@ -52,6 +53,8 @@ for i = 1:nTrees
         trees(i).leaves = leaves;
 
         save('trees', 'trees');
+        t2 = toc(t1);
+        fprintf('Total tree time %f\n', t2);
     catch ME
         disp(getReport(ME,'extended'));
         pause

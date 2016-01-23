@@ -10,7 +10,7 @@ numCells = sum(4 .^ (0:pyramidLevels-1));
 segments = segmentImage(image);
 
 % Compute the features for all superpixels
-features = extractImageFeatures(image, segments, params);
+features = extractImageFeatures2(image, segments, params);
 
 % Calculate the score matrix
 scores = imageScore(models, features);

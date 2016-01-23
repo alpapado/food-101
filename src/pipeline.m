@@ -27,29 +27,48 @@ params.encodingLength = params.numBases;
 params = load('params.mat');
 params
 
-total = segmentDataset(params);
-trees = randomForest(params);
+% Segment and encode dataset
+% total = segmentDataset(params);
 
-load('trees.mat');
-load('vset', 'vset');
+% Generate random seed
+[~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
+seed = str2double(seed);
 
+% Seed the generator
+rng(seed);
+
+% Grow forest
+%trees = randomForest(params);
+
+if ~exist('trees', 'var')
+    load('trees.mat');
+end
+
+if ~exist('vset', 'var')
+    load('vset', 'vset');
+end
+ 
 leaves = cell2mat(extractfield(trees, 'leaves'));
 
-metrics = leafMetrics( leaves, params );
-save('metrics.mat', 'metrics');
+if ~exist('metrics', 'var')
+    load metrics;
+end
+%metrics = leafMetrics( leaves, params );
+%save('metrics.mat', 'metrics');
 
-models = mineComponents(leaves, metrics, vset, params);
-params.models = models;
-save('components.mat', 'models');
+%models = mineComponents(leaves, metrics, vset, params);
+%params.models = models;
+%save('components.mat', 'models');
+%save('params.mat', '-struct', 'params');
 
 trainFinalClassifier(params);
 clear;
 
-load('train.mat');
-model = train(double(y), sparse(double(X)), '-s 2 -n 64');
-save('model.mat', 'model');
-clear;
+%load('train.mat');
+%model = train(double(y), sparse(double(X)), '-s 2 -n 64');
+%save('model.mat', 'model');
+%clear;
 
-load('test.mat');
-load('model');
-p = predict(double(y), sparse(double(X)), model);
+%load('test.mat');
+%load('model');
+%p = predict(double(y), sparse(double(X)), model);
