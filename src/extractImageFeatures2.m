@@ -24,7 +24,7 @@ else
 end
 
 gridStep = params.gridStep;
-gridStep = 8;
+
 % SIFT
 if strcmp(params.featureType, 'sift')
     binSize = 8;
@@ -53,15 +53,14 @@ end
 % Compute the sparse codes
 % parameter of the optimization procedure are chosen
 X = descriptors';
-ompParam.L=10; % not more than 10 non-zeros coefficients
-ompParam.eps=0.1; % squared norm of the residual should be less than 0.1
-ompParam.numThreads=-1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
+ompParam.L = 10; % not more than 10 non-zeros coefficients
+ompParam.eps = 0.1; % squared norm of the residual should be less than 0.1
+ompParam.numThreads = -1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
 S = full(mexOMP(X, params.B, ompParam));
 
 % Xhat = params.B * S;
 % for i = 1:size(X, 2)
 %    plot(1:size(X,1), X(:,i), 'r', 1:size(X,1), Xhat(:,i), 'b');
-%    sum(S(:,i)~=0)
 %    title(sprintf('%d non zero activations', ompParam.L));
 %    legend('X', 'Xhat');
 %    pause;

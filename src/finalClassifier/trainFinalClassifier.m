@@ -41,8 +41,8 @@ for i = 1:nImages
         split = strsplit(str, '/');
         class = num2str(cell2mat(split(1)));
         imgPath = ['data/images/' str '.jpg'];
-        image = imread(imgPath);
-        X(i,:) = extractImageFeatureVector(image, components, params);
+        I = imread(imgPath);
+        X(i,:) = extractImageFeatureVector(I, params);
         y(i) = find(strcmp(classes, class));
         toc
     catch ME

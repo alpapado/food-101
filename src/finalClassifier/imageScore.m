@@ -14,13 +14,12 @@ function scores = imageScore(models, features)
 scores = zeros(nSuperpixels, nClasses, nComponents);
 X = features;
 
+%TODO Maybe do this without loops
 for k = 1:nClasses
     for n = 1:nComponents          
-        model = models(k, n).svm;
-        
-        % TODO Fix probability estimates (maybe not necessary)
-        [~, prob_estimates] = svmPredict(model, X);
-        scores(:, k, n) = prob_estimates;
+        model = models(k, n).svm;        
+        [~, svmScore] = svmPredict(model, X);
+        scores(:, k, n) = svmScore;
     end
 end
 
