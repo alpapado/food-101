@@ -33,8 +33,8 @@ if strcmp(params.descriptorType, 'sift')
     frames = transpose(frames);
     descriptors = transpose(descriptors);
     
-    features = zeros(numSuperpixels, size(params.Bd, 2));
-%     features = zeros(numSuperpixels, size(params.Bd, 2) + size(params.Bc, 2));
+%     features = zeros(numSuperpixels, size(params.Bd, 2));
+    features = zeros(numSuperpixels, size(params.Bd, 2) + size(params.Bc, 2));
     
 elseif strcmp(params.descriptorType, 'surf')
     % Create grid on which the SURFs will be calculated
@@ -51,16 +51,12 @@ elseif strcmp(params.descriptorType, 'surf')
     
 end
 
-% TODO Compute color values
-
 % Compute the sparse codes for the descriptors
-X = descriptors';
+Xd = descriptors';
 ompParam.L = 10; % not more than 10 non-zeros coefficients
 ompParam.eps = 0.1; % squared norm of the residual should be less than 0.1
 ompParam.numThreads = -1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
-S = full(mexOMP(X, params.Bd, ompParam));
-
-% TODO Compute the sparse codes for the color values
+S = full(mexOMP(Xd, params.Bd, ompParam));
 
 % Xhat = params.Bd * S;
 % for i = 1:size(X, 2)
@@ -71,7 +67,7 @@ S = full(mexOMP(X, params.Bd, ompParam));
 % end
 
 nFrames = size(frames, 1);
-
+whos features
 % For every superpixel
 for i = 1:numSuperpixels
     
@@ -96,11 +92,29 @@ for i = 1:numSuperpixels
             continue;
         end
         
-        spActivations = S(:, spPoints);
+        % Compute color values
+        % Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
+        poi = uint8(zeros(length(spPoints), 1, 3)); % Image region whose lab values to compute
+        
+        for j = 1:length(spPoints)
+            poi(j,1,:) = I(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
+        end
 
-        % Max pooling
-        features(i, :) = max(spActivations, [], 2);
-    catch
+%       Now squeeze out the singleton
+        Xc = transpose(squeeze(vl_xyz2lab(vl_rgb2xyz(poi))));
+        
+        % Compute the sparse codes for the color values of current
+        % superpixel
+        Sc = full(mexOMP(Xc, params.Bc, ompParam));
+        
+        % Extract descriptor sparse codes for current superpixel
+        Sd = S(:, spPoints);
+       
+        % Max pool and concatenate
+        features(i, 1:512) = max(Sd, [], 2); % Pool descriptors
+        features(i, 513:end) = max(Sc, [], 2); % Pool color
+    catch ME
+        disp(getReport(ME,'extended')); 
         Iseg = vl_imseg(im2double(I), L);
         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
         J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
