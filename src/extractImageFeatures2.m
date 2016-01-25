@@ -9,7 +9,7 @@ end
 % Preallocate space for result
 spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
-features = zeros(numSuperpixels, params.encodingLength);
+% features = zeros(numSuperpixels, params.encodingLength);
 badSegments = [];
 
 % Get image dimensions
@@ -26,15 +26,17 @@ end
 gridStep = params.gridStep;
 
 % SIFT
-if strcmp(params.featureType, 'sift')
+if strcmp(params.descriptorType, 'sift')
     binSize = 8;
     [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
 
     frames = transpose(frames);
     descriptors = transpose(descriptors);
-    features = zeros(numSuperpixels, size(params.B, 2));
     
-elseif strcmp(params.featureType, 'surf')
+    features = zeros(numSuperpixels, size(params.Bd, 2));
+%     features = zeros(numSuperpixels, size(params.Bd, 2) + size(params.Bc, 2));
+    
+elseif strcmp(params.descriptorType, 'surf')
     % Create grid on which the SURFs will be calculated
     gridX = 1:gridStep:width;
     gridY = 1:gridStep:height;
@@ -49,16 +51,18 @@ elseif strcmp(params.featureType, 'surf')
     
 end
 
+% TODO Compute color values
 
-% Compute the sparse codes
-% parameter of the optimization procedure are chosen
+% Compute the sparse codes for the descriptors
 X = descriptors';
 ompParam.L = 10; % not more than 10 non-zeros coefficients
 ompParam.eps = 0.1; % squared norm of the residual should be less than 0.1
 ompParam.numThreads = -1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
-S = full(mexOMP(X, params.B, ompParam));
+S = full(mexOMP(X, params.Bd, ompParam));
 
-% Xhat = params.B * S;
+% TODO Compute the sparse codes for the color values
+
+% Xhat = params.Bd * S;
 % for i = 1:size(X, 2)
 %    plot(1:size(X,1), X(:,i), 'r', 1:size(X,1), Xhat(:,i), 'b');
 %    title(sprintf('%d non zero activations', ompParam.L));
@@ -93,9 +97,6 @@ for i = 1:numSuperpixels
         end
         
         spActivations = S(:, spPoints);
-
-        % Mean pooling
-    %     features(i, :) = mean(spActivations, 2);
 
         % Max pooling
         features(i, :) = max(spActivations, [], 2);

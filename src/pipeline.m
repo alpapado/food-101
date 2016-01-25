@@ -5,27 +5,37 @@ params.nTrees = 30;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
-params.featureType = 'sift';
+params.descriptorType = 'sift';
 params.gridStep = 8;
 params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
-params.numBases = 512;
+params.descriptorBases = 512;
+params.colorBases = 64;
 
-if strcmp(params.featureType, 'sift')
-    params.featureLength = 128;
+if strcmp(params.descriptorType, 'sift')
+    params.descriptorLength = 128;
     params.modes = 32;
-elseif strcmp(params.featureType, 'surf')
-    params.featureLength = 64;
+elseif strcmp(params.descriptorType, 'surf')
+    params.descriptorLength = 64;
     params.modes = 64;
 end
 
-params.encodingLength = 2*params.featureLength*params.modes + 2*3*params.modes;
-params.encodingLength = params.numBases;
+% params.encodingLength = 2*params.descriptorLength*params.modes + 2*3*params.modes;
+params.encodingLength = params.descriptorBases + params.colorBases;
+
 % encParams = calcGlobalParams(params);
 % save('params.mat', '-append', '-struct', 'encParams');
 
 params = load('params.mat');
 params
+
+% Compute bases
+if ~isfield(params, 'Bd') || ~isfield(params, 'Bc')
+    [Xd, Xc] = getFeatureSample(100, params.descriptorType);
+    [Bd, Bc] = computeBases(Xd, Xc, params.descriptorBases, params.colorBases);
+    params.Bd = Bd;
+    params.Bc = Bc;
+end
 
 % Segment and encode dataset
 total = segmentDataset(params);

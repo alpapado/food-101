@@ -33,14 +33,14 @@ parfor i = 1:length(ind)
     end     
     
     % SIFT
-    if strcmp(params.featureType, 'sift')
+    if strcmp(params.descriptorType, 'sift')
         binSize = 8;
         [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
         frames = transpose(frames);
         descriptors = transpose(descriptors);
         numGridPoints = size(frames, 1);
         
-    elseif strcmp(params.featureType, 'surf')
+    elseif strcmp(params.descriptorType, 'surf')
         % Create grid on which the SURFs will be calculated
         gridX = 1:gridStep:width;
         gridY = 1:gridStep:height;
