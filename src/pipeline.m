@@ -20,14 +20,15 @@ elseif strcmp(params.descriptorType, 'surf')
     params.modes = 64;
 end
 
-% params.encodingLength = 2*params.descriptorLength*params.modes + 2*3*params.modes;
 params.encodingLength = params.descriptorBases + params.colorBases;
 
-% encParams = calcGlobalParams(params);
-% save('params.mat', '-append', '-struct', 'encParams');
-
 params = load('params.mat');
-params
+disp(params);
+
+% Generate random seed
+[~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
+seed = str2double(seed);
+rng(seed);
 
 % Compute bases
 if ~isfield(params, 'Bd') || ~isfield(params, 'Bc')
@@ -35,17 +36,13 @@ if ~isfield(params, 'Bd') || ~isfield(params, 'Bc')
     [Bd, Bc] = computeBases(Xd, Xc, params.descriptorBases, params.colorBases);
     params.Bd = Bd;
     params.Bc = Bc;
+    save('params.mat', '-struct', 'params');
 end
 
 % Segment and encode dataset
-total = segmentDataset(params);
-
-% Generate random seed
-[~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
-seed = str2double(seed);
-
-% Seed the generator
-rng(seed);
+if ~exist('data.mat', 'file')
+    total = segmentDataset(params);
+end
 
 % Grow forest
 trees = randomForest(params);
@@ -69,7 +66,6 @@ end
 
 models = mineComponents(leaves, metrics, vset, params);
 params.models = models;
-save('components.mat', 'models');
 save('params.mat', '-struct', 'params');
 
 clear vset trees
@@ -77,11 +73,11 @@ clear vset trees
 trainFinalClassifier(params);
 clear;
 
-%load('train.mat');
-%model = train(double(y), sparse(double(X)), '-s 2 -n 64');
-%save('model.mat', 'model');
-%clear;
+load('train.mat');
+model = train(double(y), sparse(double(X)), '-s 2 -n 64');
+save('model.mat', 'model');
+clear;
 
-%load('test.mat');
-%load('model');
-%p = predict(double(y), sparse(double(X)), model);
+load('test.mat');
+load('model');
+p = predict(double(y), sparse(double(X)), model);

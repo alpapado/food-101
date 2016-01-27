@@ -47,7 +47,7 @@ elseif strcmp(params.descriptorType, 'surf')
     [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
 
     frames = validPoints.Location;
-    features = zeros(numSuperpixels, 64);
+    features = zeros(numSuperpixels, size(params.Bd, 2) + size(params.Bc, 2));
     
 end
 
@@ -67,7 +67,7 @@ S = full(mexOMP(Xd, params.Bd, ompParam));
 % end
 
 nFrames = size(frames, 1);
-whos features
+
 % For every superpixel
 for i = 1:numSuperpixels
     
@@ -87,7 +87,7 @@ for i = 1:numSuperpixels
         end
         spPoints(spPoints == 0) = [];
 
-        if isempty(spPoints)
+        if isempty(spPoints) || length(spPoints) == 1
             badSegments = [badSegments; s];
             continue;
         end
@@ -111,16 +111,18 @@ for i = 1:numSuperpixels
         Sd = S(:, spPoints);
        
         % Max pool and concatenate
-        features(i, 1:512) = max(Sd, [], 2); % Pool descriptors
-        features(i, 513:end) = max(Sc, [], 2); % Pool color
+        d = params.descriptorBases;
+        features(i, 1:d) = max(Sd, [], 2); % Pool descriptors
+        features(i, d+1:end) = max(Sc, [], 2); % Pool color
+        
     catch ME
         disp(getReport(ME,'extended')); 
-        Iseg = vl_imseg(im2double(I), L);
-        markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-        J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
-        subplot(1,2,1); subimage(J);
-        subplot(1,2,2); subimage(Iseg);
-        pause
+%         Iseg = vl_imseg(im2double(I), L);
+%         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
+%         J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
+%         subplot(1,2,1); subimage(J);
+%         subplot(1,2,2); subimage(Iseg);
+%         pause
     end
    
 end
