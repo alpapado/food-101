@@ -5,7 +5,7 @@ params.nTrees = 30;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
-params.descriptorType = 'sift';
+params.descriptorType = 'surf';
 params.gridStep = 8;
 params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
@@ -32,7 +32,7 @@ rng(seed);
 
 % Compute bases
 if ~isfield(params, 'Bd') || ~isfield(params, 'Bc')
-    [Xd, Xc] = getFeatureSample(100, params.descriptorType);
+    [Xd, Xc] = getFeatureSample(100, params.descriptorType, false);
     [Bd, Bc] = computeBases(Xd, Xc, params.descriptorBases, params.colorBases);
     params.Bd = Bd;
     params.Bc = Bc;

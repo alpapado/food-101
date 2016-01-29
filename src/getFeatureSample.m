@@ -9,6 +9,10 @@ function [Xd, Xc] = getFeatureSample( nImages, descriptorType, normalize )
 list = strsplit(w, '\n'); % list of image encodings
 list(end) = []; % last is empty
 
+if ~exist('normalize', 'var')
+    normalize = false;
+end
+
 ind = randi([1 length(list)], nImages, 1);
 Xd = [];
 Xc = [];
