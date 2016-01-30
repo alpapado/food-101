@@ -62,6 +62,7 @@ parfor i = 1:length(ind)
 
 end
 
+whos
 delete(gcp);
 
 Xd = Xd(randperm(size(Xd,1)), :);
@@ -71,8 +72,8 @@ if normalize
     Xd = transpose(featureNormalize(Xd(1:2048, :)));
     Xc = transpose(featureNormalize(Xc(1:2048, :)));
 else
-    Xd = transpose(Xd(1:2048, :));
-    Xc = transpose(Xc(1:2048, :));
+    Xd = transpose(Xd(1:4096, :));
+    Xc = transpose(Xc(1:4096, :));
 end
 
 end

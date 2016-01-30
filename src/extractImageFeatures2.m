@@ -34,7 +34,7 @@ if strcmp(params.descriptorType, 'sift')
     descriptors = transpose(descriptors);
     
 %     features = zeros(numSuperpixels, size(params.Bd, 2));
-    features = zeros(numSuperpixels, size(params.Bd, 2) + size(params.Bc, 2));
+    features = zeros(numSuperpixels, params.descriptorBases + params.colorBases);
     
 elseif strcmp(params.descriptorType, 'surf')
     % Create grid on which the SURFs will be calculated
@@ -47,18 +47,19 @@ elseif strcmp(params.descriptorType, 'surf')
     [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
 
     frames = validPoints.Location;
-    features = zeros(numSuperpixels, size(params.Bd, 2) + size(params.Bc, 2));
+    features = zeros(numSuperpixels, params.descriptorBases + params.colorBases);
     
 end
 
 % Compute the sparse codes for the descriptors
 Xd = descriptors';
-ompParam.L = 10; % not more than 10 non-zeros coefficients
+ompParam.L = 20; % not more than 10 non-zeros coefficients
 ompParam.eps = 0.1; % squared norm of the residual should be less than 0.1
 ompParam.numThreads = -1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
 S = full(mexOMP(Xd, params.Bd, ompParam));
 
 % Xhat = params.Bd * S;
+% X = Xd;
 % for i = 1:size(X, 2)
 %    plot(1:size(X,1), X(:,i), 'r', 1:size(X,1), Xhat(:,i), 'b');
 %    title(sprintf('%d non zero activations', ompParam.L));
@@ -105,15 +106,27 @@ for i = 1:numSuperpixels
         
         % Compute the sparse codes for the color values of current
         % superpixel
+        ompParam.L = 3;
         Sc = full(mexOMP(Xc, params.Bc, ompParam));
         
+%         Xhat = params.Bc * Sc;
+%         X = Xc;
+%         for j = 1:size(X, 2)
+%            plot(1:size(X,1), X(:,j), 'r', 1:size(X,1), Xhat(:,j), 'b');
+%            title(sprintf('%d non zero activations', ompParam.L));
+%            legend('X', 'Xhat');
+%            pause;
+%         end
+
         % Extract descriptor sparse codes for current superpixel
         Sd = S(:, spPoints);
        
         % Max pool and concatenate
         d = params.descriptorBases;
-        features(i, 1:d) = max(Sd, [], 2); % Pool descriptors
-        features(i, d+1:end) = max(Sc, [], 2); % Pool color
+        yd = max(Sd, [], 2);
+        yc = max(Sc, [], 2);
+        features(i, 1:d) = yd ./ norm(yd); % Pool descriptors
+        features(i, d+1:end) = yc ./ norm(yc); % Pool color
         
     catch ME
         disp(getReport(ME,'extended')); 

@@ -8,3 +8,5 @@ error.txt
 *mexa64
 fast_sc/*
 GraphSeg/*
+*.sh
+*.log
