@@ -10,7 +10,7 @@ end
 
 function checkSpliting(rtree)
 iterator = rtree.depthfirstiterator;
-
+hasError = false;
 for i = 1:size(iterator, 2);
     nodeId = iterator(i);
     node = rtree.get(nodeId);
@@ -28,17 +28,24 @@ for i = 1:size(iterator, 2);
     right = rtree.get(rightId).cvData.validationIndex;
     
     if length(current) ~= length(left) + length(right)
+        hasError = true;
         fprintf('Wrong split -> Node size = %d - Left = %d - Right = %d\n', nodeSize, leftSize, rightSize);
     end
     
     if ~isempty(intersect(left, right))
+        hasError = true;
         fprintf('Left and right have common points\n');
     end
     
     if ~isequal(union(left,right),current)
+        hasError = true;
         fprintf('Fuck\n');
     end
     
+end
+
+if ~hasError
+   fprintf('No error in spliting\n'); 
 end
 
 end
@@ -54,6 +61,8 @@ t1 = length(rtree.get(1).trData.classIndex);
 s1 = 0;
 s2 = 0;
 
+hasError = false;
+
 for l = 1:length(leafIndices)
     leaf = rtree.get(leafIndices(l));
     s1 = s1 + length(leaf.trData.classIndex);
@@ -61,12 +70,17 @@ for l = 1:length(leafIndices)
 end
 
 if s1 ~= t1
+    hasError = true;
     fprintf('Uneven partitioning from root tr data to leaves\n'); 
 end
 
 if s2 ~= t2
+   hasError = true;
    fprintf('Uneven partitioning from root cv data to leaves\n'); 
 end
 
+if ~hasError
+   fprintf('No error in leaves\n'); 
+end
 
 end

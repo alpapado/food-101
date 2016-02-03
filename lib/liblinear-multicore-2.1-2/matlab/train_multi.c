@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <omp.h>
 #include "linear.h"
-
+#include <time.h>
 #include "mex.h"
 #include "linear_model_matlab.h"
 
@@ -384,7 +384,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	const char *error_msg;
 	// fix random seed to have same results for each run
 	// (for cross validation)
-	srand(1);
+	srand(time(NULL));
 
 	if(nlhs > 2)
 	{

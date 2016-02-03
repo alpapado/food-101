@@ -123,8 +123,15 @@ for i = 1:numSuperpixels
        
         % Max pool and concatenate
         d = params.descriptorBases;
-        yd = max(Sd, [], 2);
-        yc = max(Sc, [], 2);
+        
+        if strcmp(params.pooling, 'max')
+            yd = max(Sd, [], 2);
+            yc = max(Sc, [], 2);
+        elseif strcmp(params.pooling, 'mean')
+            yd = mean(Sd, 2);
+            yc = mean(Sc, 2);
+        end
+        
         features(i, 1:d) = yd ./ norm(yd); % Pool descriptors
         features(i, d+1:end) = yc ./ norm(yc); % Pool color
         

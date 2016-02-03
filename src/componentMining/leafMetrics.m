@@ -35,19 +35,18 @@ nSamples = params.treeSamples;
 classConf = single(zeros(nClasses, nSamples));
 
 classDist = classDistribution(leaves, nClasses);
-delta = computeDeltas(leaves, nTrees);
+delta = computeDeltas(leaves, nTrees, params.treeSamples);
 
 fprintf('Calculating class confidence...');
+
 tic;
-parfor y = 1:nClasses
-    for s = 1:nSamples
-%         classConf(y,s) = sum( single(delta(:,s)) .* classDist(y,:)' );
-        classConf(y,s) = classDist(y,:) * single(delta(:,s));
-    end
+for y = 1:nClasses
+    classConf(y,:) = classDist(y,:) * single(delta);
 end
+toc;
 
 classConf = classConf ./ nTrees;
-toc;
+
 
 end
 
@@ -96,17 +95,14 @@ distinct = single(zeros(nLeaves, nClasses));
 fprintf('Calculating distinctiveness...');
 tic;
 
-parfor y = 1:nClasses
-    for l = 1:nLeaves
-        distinct(l,y) = sum( single(delta(l,:)) .* classConf(y,:) );
-%         distinct(l,y) = classConf(y,:) * single(delta(l,:))';
-    end 
+for y = 1:nClasses
+    distinct(:,y) = classConf(y,:) * single(delta)';
 end
 
 toc;
 end
 
-function delta = computeDeltas(leaves, nTrees)
+function delta = computeDeltas(leaves, nTrees, nSamples)
 %computeDeltas Calculates the deltas for all combinations of samples and
 %leaves
 %   The deltas are a simple auxilliary variable that show whether or not a
@@ -120,9 +116,10 @@ fprintf('Computing deltas...');
 tic;
 nLeaves = length(leaves);
 
+
 % Number of samples in validation set
-numSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
-delta = uint8(zeros(nLeaves, numSamples));
+% nSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees
+delta = uint8(zeros(nLeaves, nSamples));
 
 for l = 1:nLeaves
     sampleIds = leaves(l).cvData.validationIndex;  

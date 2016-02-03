@@ -75,7 +75,7 @@ function stop = stopGrowing(trset, trsetInd, tree, nodeId)
 %
 
 stop = false;
-maxDepth = 5;
+maxDepth = 7;
 minSamples = 25;
 
 % Check condition #1

@@ -1,16 +1,17 @@
 load('classes.mat', 'classes');
 params = matfile('params.mat', 'Writable', true);
 params.classes = classes;
-params.nTrees = 30;
+params.nTrees = 50;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
-params.descriptorType = 'sift';
+params.descriptorType = 'surf';
 params.gridStep = 8;
 params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
 params.descriptorBases = 512;
 params.colorBases = 64;
+params.pooling = 'mean';
 
 if strcmp(params.descriptorType, 'sift')
     params.descriptorLength = 128;
@@ -21,7 +22,10 @@ elseif strcmp(params.descriptorType, 'surf')
 end
 
 params.encodingLength = params.descriptorBases + params.colorBases;
-
+% if ~isfield(params, 'encParams')
+%     encParams = calcGlobalParams(params);
+%     save('params.mat', '-append', '-struct', 'encParams');
+% end
 params = load('params.mat');
 disp(params);
 
@@ -54,14 +58,14 @@ end
 if ~exist('vset', 'var')
     load('vset', 'vset');
 end
- 
+
 leaves = cell2mat(extractfield(trees, 'leaves'));
 
 metrics = leafMetrics( leaves, params );
-save('metrics.mat', 'metrics');
+save('metrics.mat', '-struct', 'metrics');
 
 if ~exist('metrics', 'var')
-    load metrics;
+    metrics = load('metrics');
 end
 
 models = mineComponents(leaves, metrics, vset, params);
