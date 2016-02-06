@@ -31,7 +31,7 @@ fprintf('Node %d...', parentId);
 % Calculate the splits
 parent = rtree.get(parentId);
 tic;
-[left, right, svm] = nodeSplit(trset, extractfield(parent.trData, 'trainingIndex'));
+[left, right, svm] = nodeSplitSerial(trset, extractfield(parent.trData, 'trainingIndex'));
 toc;
 % Set parents svm
 parent.svm = svm;
@@ -75,7 +75,7 @@ function stop = stopGrowing(trset, trsetInd, tree, nodeId)
 %
 
 stop = false;
-maxDepth = 7;
+maxDepth = 5;
 minSamples = 25;
 
 % Check condition #1

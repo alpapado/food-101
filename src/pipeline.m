@@ -1,7 +1,7 @@
 load('classes.mat', 'classes');
 params = matfile('params.mat', 'Writable', true);
 params.classes = classes;
-params.nTrees = 50;
+params.nTrees = 10;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
