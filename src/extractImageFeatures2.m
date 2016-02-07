@@ -53,9 +53,7 @@ end
 
 % Compute the sparse codes for the descriptors
 Xd = descriptors';
-ompParam.L = 20; % not more than 10 non-zeros coefficients
-ompParam.eps = 0.1; % squared norm of the residual should be less than 0.1
-ompParam.numThreads = -1; % number of processors/cores to use; the default choice is -1 and uses all the cores of the machine
+ompParam = params.ompParam;
 S = full(mexOMP(Xd, params.Bd, ompParam));
 
 % Xhat = params.Bd * S;

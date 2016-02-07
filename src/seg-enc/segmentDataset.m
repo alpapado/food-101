@@ -14,6 +14,12 @@ all.features = single(zeros(1, params.encodingLength));
 all.classIndex = uint8(zeros(1, 1));
 classes = params.classes;
 
+if strcmp(params.encoding, 'sparse')
+    encoding = 1;
+elseif strcmp(params.encoding, 'fisher')
+    encoding = 0;
+end
+
 for c = 1:length(classes)
     currentClass = num2str(cell2mat(classes(c)));
     imageFolder = [params.datasetPath '/' currentClass];
@@ -29,8 +35,14 @@ for c = 1:length(classes)
         image = imread(pathToImage, 'jpg');
         
         try                     
-            segments = segmentImage(image);        
-            features = extractImageFeatures2(image, segments, params);           
+            segments = segmentImage(image);
+            
+            if encoding
+                features = extractImageFeatures2(image, segments, params);
+            else
+                features = extractImageFeatures(image, segments, params);
+            end
+            
             tempFeatures = [tempFeatures; features];
             tempLabels = [tempLabels; zeros(size(features,1),1) + c];
         catch ME          

@@ -12,6 +12,7 @@ params.datasetPath = 'data/images';
 params.descriptorBases = 512;
 params.colorBases = 64;
 params.pooling = 'mean';
+params.encoding = 'sparse';
 
 if strcmp(params.descriptorType, 'sift')
     params.descriptorLength = 128;
@@ -21,12 +22,23 @@ elseif strcmp(params.descriptorType, 'surf')
     params.modes = 64;
 end
 
-params.encodingLength = params.descriptorBases + params.colorBases;
-% if ~isfield(params, 'encParams')
-%     encParams = calcGlobalParams(params);
-%     save('params.mat', '-append', '-struct', 'encParams');
-% end
+if strcmp(params.encoding, 'sparse')
+    params.encodingLength = params.descriptorBases + params.colorBases;
+else
+    params.encodingLength = 2 * params.modes * params.descriptorLength + 2 * params.modes * 3;
+end
+
 params = load('params.mat');
+
+if ~isfield(params, 'featureGmm')
+    encParams = calcGlobalParams(params);
+    save('params.mat', '-append', '-struct', 'encParams');
+end
+
+params.ompParam.L = 20;
+params.ompParam.eps = 0.1;
+params.ompParam.numThreads = -1;
+save('params.mat', '-struct', 'params');
 disp(params);
 
 % Generate random seed
@@ -49,39 +61,40 @@ if ~exist('data.mat', 'file')
 end
 
 % Grow forest
-trees = randomForest(params);
+% trees = randomForest(params);
 
-if ~exist('trees', 'var')
-    load('trees.mat');
-end
+% if ~exist('trees', 'var')
+%     load('trees.mat');
+% end
+% 
+% if ~exist('vset', 'var')
+%     load('vset', 'vset');
+% end
 
-if ~exist('vset', 'var')
-    load('vset', 'vset');
-end
-
-leaves = cell2mat(extractfield(trees, 'leaves'));
-
-metrics = leafMetrics( leaves, params );
-save('metrics.mat', '-struct', 'metrics');
-
-if ~exist('metrics', 'var')
-    metrics = load('metrics');
-end
-
-models = mineComponents(leaves, metrics, vset, params);
-params.models = models;
-save('params.mat', '-struct', 'params');
-
-clear vset trees
-
-trainFinalClassifier(params);
-clear;
-
-load('train.mat');
-model = train(double(y), sparse(double(X)), '-s 2 -n 64');
-save('model.mat', 'model');
-clear;
-
-load('test.mat');
-load('model');
-p = predict(double(y), sparse(double(X)), model);
+% leaves = cell2mat(extractfield(trees, 'leaves'));
+% clear trees;
+% metrics = leafMetrics( leaves, params );
+% save('metrics.mat', '-struct', 'metrics');
+% 
+% if ~exist('metrics', 'var')
+%     metrics = load('metrics');
+% end
+% 
+% trset = load('data');
+% models = mineComponents(leaves, metrics, vset, trset, params);
+% params.models = models;
+% save('params.mat', '-struct', 'params');
+% 
+% clear vset trset
+% 
+% trainFinalClassifier(params);
+% clear;
+% 
+% load('train.mat');
+% model = train(double(y), sparse(double(X)), '-s 2 -n 64');
+% save('model.mat', 'model');
+% clear;
+% 
+% load('test.mat');
+% load('model');
+% p = predict(double(y), sparse(double(X)), model);

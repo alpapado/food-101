@@ -72,8 +72,8 @@ if normalize
     Xd = transpose(featureNormalize(Xd(1:2048, :)));
     Xc = transpose(featureNormalize(Xc(1:2048, :)));
 else
-    Xd = transpose(Xd(1:4096, :));
-    Xc = transpose(Xc(1:4096, :));
+    Xd = transpose(Xd);
+    Xc = transpose(Xc);
 end
 
 end
