@@ -9,7 +9,7 @@ end
 % Preallocate space for result
 spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
-% features = zeros(numSuperpixels, params.encodingLength);
+features = zeros(numSuperpixels, params.encodingLength);
 badSegments = [];
 
 % Get image dimensions
@@ -31,10 +31,7 @@ if strcmp(params.descriptorType, 'sift')
     [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
 
     frames = transpose(frames);
-    descriptors = transpose(descriptors);
-    
-%     features = zeros(numSuperpixels, size(params.Bd, 2));
-    features = zeros(numSuperpixels, params.descriptorBases + params.colorBases);
+    descriptors = transpose(descriptors);  
     
 elseif strcmp(params.descriptorType, 'surf')
     % Create grid on which the SURFs will be calculated
@@ -47,7 +44,6 @@ elseif strcmp(params.descriptorType, 'surf')
     [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
 
     frames = validPoints.Location;
-    features = zeros(numSuperpixels, params.descriptorBases + params.colorBases);
     
 end
 

@@ -69,8 +69,8 @@ Xd = Xd(randperm(size(Xd,1)), :);
 Xc = Xc(randperm(size(Xc,1)), :);
 
 if normalize
-    Xd = transpose(featureNormalize(Xd(1:2048, :)));
-    Xc = transpose(featureNormalize(Xc(1:2048, :)));
+    Xd = transpose(featureNormalize(Xd));
+    Xc = transpose(featureNormalize(Xc));
 else
     Xd = transpose(Xd);
     Xc = transpose(Xc);

@@ -30,13 +30,13 @@ end
 
 params = load('params.mat');
 
-if ~isfield(params, 'featureGmm')
+if ~isfield(params, 'featureGmm') && strcmp(params.encoding, 'fisher')
     encParams = calcGlobalParams(params);
     save('params.mat', '-append', '-struct', 'encParams');
 end
 
 params.ompParam.L = 20;
-params.ompParam.eps = 0.1;
+params.ompParam.eps = 0.01;
 params.ompParam.numThreads = -1;
 save('params.mat', '-struct', 'params');
 disp(params);
@@ -61,34 +61,35 @@ if ~exist('data.mat', 'file')
 end
 
 % Grow forest
-% trees = randomForest(params);
+if ~exist('trees.mat', 'file')
+    trees = randomForest(params);
+else
+    load('trees.mat');
+end
+ 
+if ~exist('vset', 'var')
+    load('vset', 'vset');
+end
 
-% if ~exist('trees', 'var')
-%     load('trees.mat');
-% end
-% 
-% if ~exist('vset', 'var')
-%     load('vset', 'vset');
-% end
-
-% leaves = cell2mat(extractfield(trees, 'leaves'));
-% clear trees;
-% metrics = leafMetrics( leaves, params );
-% save('metrics.mat', '-struct', 'metrics');
-% 
-% if ~exist('metrics', 'var')
-%     metrics = load('metrics');
-% end
-% 
-% trset = load('data');
-% models = mineComponents(leaves, metrics, vset, trset, params);
+leaves = cell2mat(extractfield(trees, 'leaves'));
+clear trees;
+if ~exist('metrics.mat', 'file')
+    metrics = leafMetrics( leaves, params );
+    save('metrics.mat', '-struct', 'metrics');
+end
+ 
+if ~exist('metrics', 'var')
+    metrics = load('metrics');
+end
+ 
+% models = mineComponents(leaves, metrics, vset, params);
 % params.models = models;
 % save('params.mat', '-struct', 'params');
 % 
 % clear vset trset
-% 
-% trainFinalClassifier(params);
-% clear;
+
+trainFinalClassifier(params);
+clear;
 % 
 % load('train.mat');
 % model = train(double(y), sparse(double(X)), '-s 2 -n 64');
