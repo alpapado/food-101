@@ -1,23 +1,15 @@
-function segments = segmentImage(image)
-%segmentImage Performs segmentation on an image using the SLIC algorithm
-%   image: The image to be segmented
-%   segments: The produced segments by the SLIC algorithm
+function L = segmentImage(I)
+%segmentImage Perform segmentation on an image using the Graph-Based
+%Segmentation algorithm by Felzenszwalb
+%   I: The image to be segmented
+%   L: The produced segments
 
-% Calculate region size
-[height, width, channels] = size(image);
-regionSize = round(max(size(image)) * 0.3);
-% regionSize = round( (height + width) * 0.22 / 2);
+[height, width, ~] = size(I);
+sigma = 0.1;
+kappa = 300;
+minSize = height * width / 100;
 
-% Calculate regularizer
-regularizer = 0.1;
-
-% Convert input image to L*a*b
-imlab = vl_xyz2lab(vl_rgb2xyz(image));
-
-% Compute the segmentation
-% Add one to the result in order to start the superpixel indexing from one
-% instead of zero
-segments = vl_slic(single(imlab), regionSize, regularizer, 'MinRegionSize', (1/3 * regionSize) ^ 2) + 1;
+L = segmentFelzenszwalb(I, sigma, kappa, minSize) + 1;
 
 end
 
