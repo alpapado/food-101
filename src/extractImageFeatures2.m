@@ -50,22 +50,16 @@ end
 % Compute the sparse codes for the descriptors
 Xd = descriptors';
 ompParam = params.ompParam;
-% S = full(mexOMP(Xd, params.Bd, ompParam));
-
-ompParam.pos = 1;
-ompParam.lambda = 0.15;
 S = full(mexLasso(Xd, params.Bd, ompParam));
 
+% DEBUGGING
 % Xhat = params.Bd * S;
 % X = Xd;
 % for i = 1:size(X, 2)
 %    plot(1:size(X,1), X(:,i), 'r', 1:size(X,1), Xhat(:,i), 'b');
-%    title(sprintf('%d non zero activations', ompParam.L));
 %    legend('X', 'Xhat');
 %    pause;
 % end
-
-nFrames = size(frames, 1);
 
 % For every superpixel
 for i = 1:numSuperpixels
@@ -74,17 +68,9 @@ for i = 1:numSuperpixels
         % Superpixel index
         s = spIndices(i);
 
-        % Find spixel points
-        spPoints = uint32(zeros(nFrames, 1));
-        k = 1;
-
-        for j = 1:nFrames
-            if L(frames(j,2), frames(j,1)) == s
-                spPoints(k) = j;
-                k = k + 1;
-            end
-        end
-        spPoints(spPoints == 0) = [];
+        % --------------------Find spixel points---------------------------
+        linInd = sub2ind(size(L), frames(:,2), frames(:,1));
+        spPoints = find(L(linInd) == s);
 
         if isempty(spPoints) || length(spPoints) == 1
             badSegments = [badSegments; s];
@@ -105,8 +91,6 @@ for i = 1:numSuperpixels
         
         % Compute the sparse codes for the color values of current
         % superpixel
-        ompParam.L = 3;
-%         Sc = full(mexOMP(Xc, params.Bc, ompParam));
         Sc = full(mexLasso(Xc, params.Bc, ompParam));
 
         % Extract descriptor sparse codes for current superpixel
@@ -114,7 +98,30 @@ for i = 1:numSuperpixels
                    
         % Max pool and concatenate
         d = params.descriptorBases;
+                       
+        % DEBUGGING
+%         yd = max(Sc, [], 2);
+%         yd2 = [mean(Sd, 2); mean(Sc, 2)];
         
+%         subplot(2,1,1);    
+%         scatter(1:length(yd), Sc(:,1)); 
+%         axis([1 length(yd) 0 1]) 
+%         title('Unpooled');
+%         hold on
+%         for j = 2:size(Sd, 2)
+%             scatter(1:length(yd), Sc(:,j));
+%         end
+%         hold off
+%         subplot(2,1,2);
+%         scatter(1:length(yd), yd);
+%         axis([1 length(yd) 0 1]) 
+%         title(sprintf('Max pool, sparsity=%f', sum(yd~=0)/length(yd)));
+        
+%         subplot(3,1,3); 
+%         scatter(1:length(yd), yd2);axis([1 length(yd) 0 1]) 
+%         title(sprintf('Mean pool, sparsity=%f', sum(yd2~=0)/length(yd2)));      
+%         pause
+              
         % Pool features
         if strcmp(params.pooling, 'max')
             yd = max(Sd, [], 2);
@@ -123,45 +130,7 @@ for i = 1:numSuperpixels
             yd = mean(Sd, 2);
             yc = mean(Sc, 2);
         end
-               
-%         yd = [max(Sd, [], 2); max(Sc, [], 2)];
-%         yd2 = [mean(Sd, 2); mean(Sc, 2)];
-%         
-%         subplot(3,1,1);    
-%         scatter(1:length(yd), [Sd(:,1); Sc(:,1)]); axis([1 length(yd) 0 1]) 
-%         title('Unpooled');
-%         hold on
-%         for j = 2:size(Sd, 2)
-%             scatter(1:length(yd), [Sd(:,j); Sc(:,j)]);
-%         end
-%         hold off
-%         subplot(3,1,2);
-%         scatter(1:length(yd), yd);axis([1 length(yd) 0 1]) 
-%         title(sprintf('Max pool, sparsity=%f', sum(yd~=0)/length(yd)));
-%         
-%         subplot(3,1,3); 
-%         scatter(1:length(yd), yd2);axis([1 length(yd) 0 1]) 
-%         title(sprintf('Mean pool, sparsity=%f', sum(yd2~=0)/length(yd2)));
-%         
-%         pause
-              
-         
-        % PROBLEM Sc sometimes is 0 and produces NaN
-        if ~any(yc) && sum(any(Xc))
-%             Xc
-%             whos Xc
-%             whos Sc
-%             subplot(2,1,1); 
-%             plot(Xc);
-%             subplot(2,1,2); plot(Sc);
-%             pause
-            msgID = 'myComponent:inputError';
-            msgtext = 'All zeros';
-
-            ME = MException(msgID,msgtext);
-            throw(ME);
-        end
-
+        
         % L2 normalize
         if norm(yc) ~= 0
             yc = yc ./ norm(yc);

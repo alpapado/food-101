@@ -1,7 +1,7 @@
 load('classes.mat', 'classes');
 params = matfile('params.mat', 'Writable', true);
 params.classes = classes;
-params.nTrees = 10;
+params.nTrees = 20;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
@@ -11,7 +11,7 @@ params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
 params.descriptorBases = 512;
 params.colorBases = 64;
-params.pooling = 'mean';
+params.pooling = 'max';
 params.encoding = 'sparse';
 
 if strcmp(params.descriptorType, 'sift')
@@ -35,8 +35,8 @@ if ~isfield(params, 'featureGmm') && strcmp(params.encoding, 'fisher')
     save('params.mat', '-append', '-struct', 'encParams');
 end
 
-params.ompParam.L = 10;
-params.ompParam.eps = 0.01;
+params.ompParam.pos = 1;
+params.ompParam.lambda = 0.15;
 params.ompParam.numThreads = -1;
 save('params.mat', '-struct', 'params');
 disp(params);
@@ -82,11 +82,11 @@ if ~exist('metrics', 'var')
     metrics = load('metrics');
 end
  
-% models = mineComponents(leaves, metrics, vset, params);
-% params.models = models;
-% save('params.mat', '-struct', 'params');
-% 
-% clear vset trset
+models = mineComponents(leaves, metrics, vset, params);
+params.models = models;
+save('params.mat', '-struct', 'params');
+
+clear vset trset
 
 trainFinalClassifier(params);
 clear;

@@ -27,20 +27,20 @@ for c = 1:length(classes)
     tempFeatures = [];
     tempLabels = [];
     nImages = size(classImages, 1);
-    
+    fprintf('Segment and encode %s \n', currentClass);
     parfor i = 1:nImages
-        fprintf('Segment and encode %s %d/%d\n', currentClass, i, nImages);  
+%         fprintf('Segment and encode %s %d/%d\n', currentClass, i, nImages);  
         
         pathToImage = [imageFolder '/' classImages(i).name];
-        image = imread(pathToImage, 'jpg');
+        I = imread(pathToImage, 'jpg');
         
         try                     
-            segments = segmentImage(image);
+            L = segmentImage(I);
             
             if encoding
-                features = extractImageFeatures2(image, segments, params);
+                features = extractImageFeatures2(I, L, params);
             else
-                features = extractImageFeatures(image, segments, params);
+                features = extractImageFeatures(I, L, params);
             end
             
             tempFeatures = [tempFeatures; features];
