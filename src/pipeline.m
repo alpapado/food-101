@@ -35,7 +35,7 @@ if ~isfield(params, 'featureGmm') && strcmp(params.encoding, 'fisher')
     save('params.mat', '-append', '-struct', 'encParams');
 end
 
-params.ompParam.L = 20;
+params.ompParam.L = 10;
 params.ompParam.eps = 0.01;
 params.ompParam.numThreads = -1;
 save('params.mat', '-struct', 'params');

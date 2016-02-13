@@ -48,14 +48,14 @@ parfor i = 1:length(ind)
     end
 
 %   Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
-    poi = uint8(zeros(size(frames, 1), 1, 3)); % Image region whose lab values to compute
+    poi = uint8(zeros(size(frames, 1), 3)); % Image region whose lab values to compute
 
     for j = 1:size(frames,1)
-        poi(j,1,:) = I(frames(j, 2), frames(j, 1), :);
+        poi(j,:) = I(frames(j, 2), frames(j, 1), :);
     end
 
 %   Now squeeze out the singleton
-    color = squeeze(vl_xyz2lab(vl_rgb2xyz(poi)));
+    color = rgb2lab(poi);
     
     Xd = [Xd; descriptors];
     Xc = [Xc; color];
