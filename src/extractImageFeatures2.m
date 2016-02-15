@@ -1,4 +1,4 @@
-function [features, badSegments] = extractImageFeatures2(I, L, params, ignoreSmallSegments)
+function [features, badSegments] = extractImageFeatures3(I, L, params, ignoreSmallSegments)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
 
@@ -49,8 +49,12 @@ end
 
 % Compute the sparse codes for the descriptors
 Xd = descriptors';
-ompParam = params.ompParam;
-S = full(mexLasso(Xd, params.Bd, ompParam));
+
+if strcmp(params.pooling, 'max')
+    S = full(mexLasso(Xd, params.Bd, params.lassoParam));
+elseif strcmp(params.pooling, 'mean')
+    S = full(mexOMP(Xd, params.Bd, params.ompParam));
+end
 
 % DEBUGGING
 % Xhat = params.Bd * S;
@@ -61,6 +65,23 @@ S = full(mexLasso(Xd, params.Bd, ompParam));
 %    pause;
 % end
 
+% -------------------Compute color values--------------------------
+poi = uint8(zeros(size(frames, 1), 3)); 
+for j = 1:size(frames, 1)          
+    poi(j,:) = I(frames(j, 2), frames(j, 1), :);
+end
+LABs = rgb2lab(poi);
+
+Xcolor = transpose(LABs);
+
+% Compute the sparse codes for the color values of current
+% superpixel       
+if strcmp(params.pooling, 'max')
+    Scolor = full(mexLasso(Xcolor, params.Bc, params.lassoParam));
+elseif strcmp(params.pooling, 'mean')
+    Scolor = full(mexOMP(Xcolor, params.Bc, params.ompParam));
+end
+
 % For every superpixel
 for i = 1:numSuperpixels
     
@@ -70,58 +91,21 @@ for i = 1:numSuperpixels
 
         % --------------------Find spixel points---------------------------
         linInd = sub2ind(size(L), frames(:,2), frames(:,1));
-        spPoints = find(L(linInd) == s);
+        spPoints = find(L(linInd) == s); % Linear indices to L
 
         if isempty(spPoints) || length(spPoints) == 1
             badSegments = [badSegments; s];
             continue;
         end
         
-        % -------------------Compute color values--------------------------
-        poi = uint8(zeros(length(spPoints), 3)); 
-        
-        for j = 1:length(spPoints)           
-            poi(j,:) = I(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
-        end
-        LABs = rgb2lab(poi);
-
-        Xc = transpose(LABs);
-        
-        %------------------------------------------------------------------
-        
-        % Compute the sparse codes for the color values of current
-        % superpixel
-        Sc = full(mexLasso(Xc, params.Bc, ompParam));
-
+        Sc = Scolor(:, spPoints);        
+        %------------------------------------------------------------------    
         % Extract descriptor sparse codes for current superpixel
         Sd = S(:, spPoints);
                    
         % Max pool and concatenate
         d = params.descriptorBases;
-                       
-        % DEBUGGING
-%         yd = max(Sc, [], 2);
-%         yd2 = [mean(Sd, 2); mean(Sc, 2)];
-        
-%         subplot(2,1,1);    
-%         scatter(1:length(yd), Sc(:,1)); 
-%         axis([1 length(yd) 0 1]) 
-%         title('Unpooled');
-%         hold on
-%         for j = 2:size(Sd, 2)
-%             scatter(1:length(yd), Sc(:,j));
-%         end
-%         hold off
-%         subplot(2,1,2);
-%         scatter(1:length(yd), yd);
-%         axis([1 length(yd) 0 1]) 
-%         title(sprintf('Max pool, sparsity=%f', sum(yd~=0)/length(yd)));
-        
-%         subplot(3,1,3); 
-%         scatter(1:length(yd), yd2);axis([1 length(yd) 0 1]) 
-%         title(sprintf('Mean pool, sparsity=%f', sum(yd2~=0)/length(yd2)));      
-%         pause
-              
+                     
         % Pool features
         if strcmp(params.pooling, 'max')
             yd = max(Sd, [], 2);
@@ -130,7 +114,27 @@ for i = 1:numSuperpixels
             yd = mean(Sd, 2);
             yc = mean(Sc, 2);
         end
+  
+        % DEBUGGING        
+%         subplot(2,1,1);    
+%         scatter(1:length(yd), Sd(:,1)); 
+%         axis([1 length(yd) 0 1]) 
+%         title('Unpooled');
+%         hold on
+%         for j = 2:size(Sd, 2)
+%             scatter(1:length(yd), Sd(:,j));
+%         end
+%         hold off
+%         subplot(2,1,2);
+%         scatter(1:length(yd), yd);
+%         axis([1 length(yd) 0 1]) 
+%         title(sprintf('Pool, sparsity=%f', sum(yd~=0)/length(yd)));
         
+%         subplot(3,1,3); 
+%         scatter(1:length(yd), yd2);axis([1 length(yd) 0 1]) 
+%         title(sprintf('Mean pool, sparsity=%f', sum(yd2~=0)/length(yd2)));      
+%         pause
+
         % L2 normalize
         if norm(yc) ~= 0
             yc = yc ./ norm(yc);

@@ -35,9 +35,14 @@ if ~isfield(params, 'featureGmm') && strcmp(params.encoding, 'fisher')
     save('params.mat', '-append', '-struct', 'encParams');
 end
 
-params.ompParam.pos = 1;
-params.ompParam.lambda = 0.15;
+params.ompParam.eps = 0.01;
+params.ompParam.L = 10;
 params.ompParam.numThreads = -1;
+
+params.lassoParam.pos = 1;
+params.lassoParam.lambda = 0.15;
+params.lassoParam.numThreads = -1;
+params.lassoParam.L = 20;
 save('params.mat', '-struct', 'params');
 disp(params);
 
@@ -61,18 +66,19 @@ if ~exist('data.mat', 'file')
 end
 
 % Grow forest
-if ~exist('trees.mat', 'file')
-    trees = randomForest(params);
-else
+% if ~exist('trees.mat', 'file')
+%     trees = randomForest(params);
+% else
     load('trees.mat');
-end
- 
+% end
+
 if ~exist('vset', 'var')
     load('vset', 'vset');
 end
 
 leaves = cell2mat(extractfield(trees, 'leaves'));
 clear trees;
+
 if ~exist('metrics.mat', 'file')
     metrics = leafMetrics( leaves, params );
     save('metrics.mat', '-struct', 'metrics');
@@ -86,7 +92,7 @@ models = mineComponents(leaves, metrics, vset, params);
 params.models = models;
 save('params.mat', '-struct', 'params');
 
-clear vset trset
+clear vset trset data
 
 trainFinalClassifier(params);
 clear;
