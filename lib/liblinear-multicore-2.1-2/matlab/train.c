@@ -280,7 +280,7 @@ int parse_command_line(int nrhs, const mxArray *prhs[], char *model_file_name)
 			return 1;
 		}
 #ifndef CV_OMP
-		mexPrintf("Total threads used: %d\n", param.nr_thread);
+		//mexPrintf("Total threads used: %d\n", param.nr_thread);
 #endif
 	}
 #ifdef CV_OMP

@@ -1,4 +1,4 @@
-function [features, badSegments] = extractImageFeatures3(I, L, params, ignoreSmallSegments)
+function [features, badSegments] = extractImageFeatures2(I, L, params, ignoreSmallSegments)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
 
