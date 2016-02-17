@@ -1,4 +1,4 @@
-function [predictions, scores] = svmPredict(models, X)
+function [predictions, scores, probs] = svmPredict(models, X)
 %SVMPREDICT returns a vector of predictions using a trained LINEAR SVM model
 %(svmTrain). 
 %   pred = SVMPREDICT(model, X) returns a vector of predictions using a 
@@ -34,6 +34,11 @@ if nModels == 1
     scores = p;
     predictions(p >= 0) =  1;
     predictions(p <  0) =  0;
+    
+    probs(1,:) = 1 ./ (1 + exp(-scores));
+    probs(2,:) = 1 - probs(1,:);
+    probs = probs';
+    
 else 
     % If we have multiple models, we can perform prediction for all of them
     % efficiently using again matrix multiplication

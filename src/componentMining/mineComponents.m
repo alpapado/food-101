@@ -53,10 +53,10 @@ models(nModels) = struct('svm', []);
 
 for i = 1:nModels
     leaf = topLeaves(i);
-
-    leafClasses = extractfield(leaf.cvData, 'classIndex');
-    vind = extractfield(leaf.cvData, 'validationIndex');
     
+    leafClasses = transpose(leaf.cvData.classIndex);
+    vind = leaf.cvData.validationIndex;
+
     X = vset.features(vind, :);
     y = transpose(double(leafClasses == class));
  
