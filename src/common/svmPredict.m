@@ -7,16 +7,9 @@ function [predictions, scores, probs] = svmPredict(models, X)
 %   predictions pred is a m x 1 column of predictions of {0, 1} values.
 %
 
-% Check if we are getting a column vector, if so, then assume that we only
-% need to do prediction for a single example
-% if (size(X, 2) == 1)
-%     % Examples should be in rows
-%     X = X';
-% end
-
 nModels = length(models);
-m = size(X,1);
-n = size(X,2);
+m = size(X,1); % Instances
+n = size(X,2); % Features
 
 if nModels == 1
     % If we have only one model
@@ -35,16 +28,22 @@ if nModels == 1
     predictions(p >= 0) =  1;
     predictions(p <  0) =  0;
     
+    % probs [2, m]
     probs(1,:) = 1 ./ (1 + exp(-scores));
     probs(2,:) = 1 - probs(1,:);
-    probs = probs';
     
-else 
+else
+    
     % If we have multiple models, we can perform prediction for all of them
     % efficiently using again matrix multiplication
     W = reshape(extractfield(models, 'w'), [n nModels]);
     p = X * W;
     scores = p;
+    
+    % probs [2, m, nModels]
+    probs(1,:,:) = 1 ./ (1 + exp(-scores));
+    probs(2,:,:) = 1 - probs(1,:,:);
+
     predictions = zeros(m, nModels);
     predictions(p >= 0) =  1;
     predictions(p <  0) =  0;

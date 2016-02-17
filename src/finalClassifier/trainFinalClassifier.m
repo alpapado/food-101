@@ -1,22 +1,21 @@
 function trainFinalClassifier(params)
 
 components = params.models;
-[X, y] = encodeImageSet('train', components, params);
-save('train.mat', 'X', 'y');
-clear X y
-
-[X, y] = encodeImageSet('test', components, params);
-save('test.mat', 'X', 'y');
-clear X y
+encodeImageSet('train', components, params);
+encodeImageSet('test', components, params);
 
 end
 
-function [X, y] = encodeImageSet(type, components, params)
+function encodeImageSet(type, components, params)
 
 if strcmp(type,'train')
   fid = fopen('data/meta/train.txt');
+  m = matfile('./train.mat', 'Writable', true);
+%   nImages = 2250;
 elseif strcmp(type,'test');
   fid = fopen('data/meta/test.txt');
+  m = matfile('./test.mat', 'Writable', true);
+%   nImages = 750;
 end
 
 images = textscan(fid, '%s', 'Delimiter', '\n');
@@ -30,8 +29,8 @@ nImages = length(imgSet);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid
 d = nClasses * nComponents * numCells; % Dimensionality of feature vec
 
-X = single(zeros(nImages, d));
-y = uint8(zeros(nImages, 1));
+m.X = single(zeros(1, d));
+m.y = uint8(zeros(1, 1));
 
 for i = 1:nImages
     try
@@ -42,11 +41,15 @@ for i = 1:nImages
         class = num2str(cell2mat(split(1)));
         imgPath = ['data/images/' str '.jpg'];
         I = imread(imgPath);
-        X(i,:) = extractImageFeatureVector(I, params);
-        y(i) = find(strcmp(classes, class));
+        
+        m.X(i,:) = transpose(extractImageFeatureVector(I, params));
+        m.y(i,1) = uint8(find(strcmp(classes, class)));
         toc
     catch ME
         disp(getReport(ME,'extended'));
+        size(m.X(i,:))
+        size(extractImageFeatureVector(I, params));
+        pause
     end
 
 end

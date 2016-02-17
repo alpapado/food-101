@@ -1,4 +1,4 @@
-function [ featureVec ] = extractImageFeatureVector(I, params)
+function F = extractImageFeatureVector(I, params)
 %extractImageFeatureVector Extract the image feature vector for final
 %classification
 %   extractImageFeatureVector(I, models, params) returns the final feature 
@@ -33,17 +33,17 @@ scores = imageScore(models, features);
 grid = spatialPyramid(pyramidLevels, I, L, badSegments);
 
 % Preallocation
-featureVec = single(zeros(nClasses * nComponents * numCells, 1));
+F = single(zeros(nClasses * nComponents * numCells, 1));
 
 i = 0;
 for gridCell = grid
     ind = gridCell.spixelsToAverage;
-    X = scores(ind, :, :);
+    X = scores(ind, :);
     av = mean(X, 1);
-
+    
     iStart = i * nClasses * nComponents + 1;
     iEnd = iStart + nClasses * nComponents - 1;
-    featureVec(iStart : iEnd) = av(:);
+    F(iStart : iEnd) = av;
     i = i + 1;
 end
 

@@ -18,6 +18,11 @@ for n = iterator
         end
 
         node = rtree.get(n);    
+
+        if isempty(node.cvData)
+          continue;
+        end
+
         model = node.svm;
 
         cvDataIndices = extractfield(node.cvData, 'validationIndex');

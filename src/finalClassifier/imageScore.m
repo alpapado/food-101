@@ -1,4 +1,4 @@
-function scores = imageScore(models, features)
+function scores = imageScore(models, X)
 %imageClassify Returns the score matrix for every superpixel in the
 %image
 %   Each superpixel in the image is scored using the previously trained
@@ -8,20 +8,8 @@ function scores = imageScore(models, features)
 
 % scores[numSuperpixels x numClasses x numComponents] score array
 
-[nSuperpixels, ~] = size(features);
-[nClasses, nComponents] = size(models);
-
-scores = zeros(nSuperpixels, nClasses, nComponents);
-X = features;
-
-%TODO Maybe do this without loops
-for k = 1:nClasses
-    for n = 1:nComponents          
-        model = models(k, n).svm;        
-        [~, svmScore] = svmPredict(model, X);
-        scores(:, k, n) = svmScore;
-    end
-end
+models = models';
+models = cell2mat(extractfield(models(:), 'svm'));
+[~, scores, ~] = svmPredict(models, X);
 
 end
-
