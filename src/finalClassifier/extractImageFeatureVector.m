@@ -24,13 +24,13 @@ models = params.models;
 L = segmentImage(I);
 
 % Compute the features for all superpixels
-[features, badSegments] = extractImageFeatures2(I, L, params, false);
+features = extractImageFeatures2(I, L, params);
 
 % Calculate the score matrix
 scores = imageScore(models, features);
 
 % Calculate the spatial pyramid grid
-grid = spatialPyramid(pyramidLevels, I, L, badSegments);
+grid = spatialPyramid(pyramidLevels, I, L);
 
 % Preallocation
 F = single(zeros(nClasses * nComponents * numCells, 1));

@@ -1,4 +1,4 @@
-function grid = spatialPyramid(levels, image, segments, badSegments)
+function grid = spatialPyramid(levels, I, L)
 %spatialPyramid Implements a spatial pyramid scheme
 %   Returns an object that contains the points that
 %   constitute the rectangles of the grid at the various levels of
@@ -10,11 +10,10 @@ function grid = spatialPyramid(levels, image, segments, badSegments)
 %   At level 1, the image is subdivided into four quadrants, yielding four 
 %   feature histograms, and so on.
 
-[width, height, ~] = size(image);
+[width, height, ~] = size(I);
 level = spatialPyramidGrid(width, height, levels);
 totalCells = sum(4.^(0:levels-1));
 grid(totalCells) = struct('spixelsToAverage', []);
-spIndices = unique(segments);
 i = 1;
 
 for l = 1:levels
@@ -29,19 +28,8 @@ for l = 1:levels
         yv = round(cell.yv);
 
         % Make sure this works
-        temp = unique(segments(min(xv):max(xv), min(yv):max(yv)));   
-        ind = zeros(length(temp), 1);
+        ind = unique(L(min(xv):max(xv), min(yv):max(yv)));         
         
-        % Temp contains sp indices which are not always sequential
-        % This converts them to sequentials i.e indices to the positions of
-        % the vector that contains the sp indices
-        for t = 1:length(temp)
-            if ismember(find(spIndices == temp(t)), badSegments)
-                continue;
-            end
-            ind(t) = find(spIndices == temp(t));
-        end
-        ind(ind==0) = [];
         grid(i).spixelsToAverage = ind;
         
         i = i + 1;

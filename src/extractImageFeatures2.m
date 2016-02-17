@@ -1,16 +1,11 @@
-function [features, badSegments] = extractImageFeatures2(I, L, params, ignoreSmallSegments)
+function features = extractImageFeatures2(I, L, params)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
-
-if ~exist('ignoreSmallSegments', 'var')
-    ignoreSmallSegments = true;
-end
 
 % Preallocate space for result
 spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
 features = zeros(numSuperpixels, params.encodingLength);
-badSegments = [];
 
 % Get image dimensions
 % Height is first ;( ;( ;(
@@ -92,11 +87,6 @@ for i = 1:numSuperpixels
         % --------------------Find spixel points---------------------------
         linInd = sub2ind(size(L), frames(:,2), frames(:,1));
         spPoints = find(L(linInd) == s); % Linear indices to L
-
-        if isempty(spPoints) || length(spPoints) == 1
-            badSegments = [badSegments; s];
-            continue;
-        end
         
         Sc = Scolor(:, spPoints);        
         %------------------------------------------------------------------    
@@ -157,10 +147,6 @@ for i = 1:numSuperpixels
 %         pause
     end
    
-end
-
-if ignoreSmallSegments == true
-    features( ~any(features,2), : ) = [];
 end
     
 end
