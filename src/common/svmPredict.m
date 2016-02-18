@@ -6,6 +6,9 @@ function [predictions, scores, probs] = svmPredict(models, X)
 %   example is a row. model is a svm model returned from train.
 %   predictions pred is a m x 1 column of predictions of {0, 1} values.
 %
+% NOTE svmPredict does not always produce correct predictions because the
+% class labels in the model struct, as returned by liblinear train, are
+% sometimes reversed. Use it only to calculate the svm scores efficiently.
 
 nModels = length(models);
 m = size(X,1); % Instances
@@ -25,8 +28,14 @@ if nModels == 1
 
     % Convert predictions into 0 / 1
     scores = p;
-    predictions(p >= 0) =  1;
-    predictions(p <  0) =  0;
+        
+    if isequal(models.Label, [0; 1])
+        predictions(p >= 0) =  0;
+        predictions(p <  0) =  1;
+    else
+        predictions(p >= 0) =  1;
+        predictions(p <  0) =  0;
+    end
     
     % probs [2, m]
     probs(1,:) = 1 ./ (1 + exp(-scores));
