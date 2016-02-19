@@ -1,11 +1,16 @@
-function features = extractImageFeatures2(I, L, params)
+function [features, badSegments] = extractImageFeatures2(I, L, params, ignoreSmallSegments)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
+
+if ~exist('ignoreSmallSegments', 'var')
+    ignoreSmallSegments = true;
+end
 
 % Preallocate space for result
 spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
 features = zeros(numSuperpixels, params.encodingLength);
+badSegments = [];
 
 % Get image dimensions
 % Height is first ;( ;( ;(
@@ -87,6 +92,14 @@ for i = 1:numSuperpixels
         % --------------------Find spixel points---------------------------
         linInd = sub2ind(size(L), frames(:,2), frames(:,1));
         spPoints = find(L(linInd) == s); % Linear indices to L
+
+        if length(spPoints) <= 1
+            fid = fopen('error.txt', 'a');
+            fprintf(fid,'Superpixel %d has %d valid points \n', s, length(spPoints));
+            fclose(fid);
+            badSegments = [badSegments; s];
+            continue;
+        end
         
         Sc = Scolor(:, spPoints);        
         %------------------------------------------------------------------    
@@ -138,7 +151,7 @@ for i = 1:numSuperpixels
         features(i, d+1:end) = yc;
         
     catch ME        
-        disp(getReport(ME,'extended'));
+       disp(getReport(ME,'extended'));
 %         Iseg = vl_imseg(im2double(I), L);
 %         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
 %         J = step(markerInserter, I, int32(frames(spPoints,:)));
@@ -147,6 +160,10 @@ for i = 1:numSuperpixels
 %         pause
     end
    
+end
+
+if ignoreSmallSegments == true
+    features( ~any(features,2), : ) = [];
 end
     
 end

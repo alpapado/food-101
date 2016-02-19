@@ -1,5 +1,5 @@
 function [left, right, svm] = nodeSplit(trset, trsetInd)
-%nodeSplit Splits the input data in two parts
+%nodeSplitSerial Splits the input data in two parts
 %   Generates n binary SVMs as decision functions on random binary partitions
 %   of the class labels in data. Keeps the one that maximizes the
 %   information gain criterion.
@@ -12,15 +12,15 @@ left = struct('trainingIndex', [], 'classIndex', []);
 right = struct('trainingIndex', [], 'classIndex', []);
 
 % Number of SVM models to be trained as decision function
-nSVMs = 100;
+numSVMs = 100;
 
 % Set SVM parameters
 nData = length(trsetInd);
-%nTrainingData = min(10*10^3, floor(0.1 * nData));
 nTrainingData = floor(0.1*nData);
 classes = trset.classIndex;
 
 X = trset.features(trsetInd, :);
+Y = trset.classIndex(trsetInd);
 
 % Remember to clear unwanted variables
 
@@ -31,27 +31,39 @@ X = trset.features(trsetInd, :);
 % memory requirements of the svm training, out of memory happens.
 
 % Initialize struct to be used by all the threads for result saving
-threadStruct(nSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
-[models, y] = train_multi(randi([0 1], nTrainingData, 1), sparse(double(X(1:nTrainingData, :))), '-s 2 -q');
+threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
 
-y = reshape(y, nTrainingData, nSVMs);
-pred = svmPredict(models, X(nTrainingData+1:end, :));
-allSplits = [y; pred];
-
-for i = 1:nSVMs
+for i = 1:numSVMs
+    
+    % Generate random binary partition of class labels
+    y = Y(1:nTrainingData);
+    randMap = randi([0 1], 101, 1);
+    
+    for j = 1:101
+        y(y==j) = randMap(j);
+    end
+    
     try
-        % Calculate information gain
-        leftIndexes = trsetInd(allSplits(:,i) == 0);
-        rightIndexes = trsetInd(allSplits(:,i) == 1);
-        leftClasses = classes(leftIndexes);
-        rightClasses = classes(rightIndexes);
-        threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
-        threadStruct(i).leftSplit = leftIndexes;
-        threadStruct(i).rightSplit = rightIndexes;
-        threadStruct(i).svm = models(i);
+        % Train the SVM and discard training data
+        model = train(double(y), sparse(double(X(1:nTrainingData, :))), '-s 2 -n 8 -q');
+        split = zeros(nData, 1);
+        split(1:length(y)) = y;
+        split(length(y)+1:end) = svmPredict(model, X(nTrainingData+1:end, :)); 
     catch ME
         disp(getReport(ME,'extended'));
+        continue;
     end
+
+    % Calculate information gain
+    leftIndexes = trsetInd(split == 0);
+    rightIndexes = trsetInd(split == 1);
+    leftClasses = classes(leftIndexes);
+    rightClasses = classes(rightIndexes);
+   
+    threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);
+    threadStruct(i).leftSplit = leftIndexes;
+    threadStruct(i).rightSplit = rightIndexes;
+    threadStruct(i).svm = model;
     
 end
 
@@ -85,4 +97,3 @@ function E = entropy(X)
     probX = arrayfun(@(x)length(find(X==x)), unique(X)) / length(X);
     E = -sum(probX .* log2(probX));
 end
-
