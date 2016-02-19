@@ -31,7 +31,7 @@ fprintf('Node %d...', parentId);
 % Calculate the splits
 parent = rtree.get(parentId);
 tic;
-[left, right, svm] = nodeSplitSerial(trset, extractfield(parent.trData, 'trainingIndex'));
+[left, right, svm] = nodeSplit(trset, extractfield(parent.trData, 'trainingIndex'));
 toc;
 % Set parents svm
 parent.svm = svm;

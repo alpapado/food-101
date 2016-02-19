@@ -14,7 +14,6 @@ function grid = spatialPyramid(levels, image, segments, badSegments)
 level = spatialPyramidGrid(width, height, levels);
 totalCells = sum(4.^(0:levels-1));
 grid(totalCells) = struct('spixelsToAverage', []);
-spIndices = unique(segments);
 i = 1;
 
 for l = 1:levels
@@ -32,14 +31,12 @@ for l = 1:levels
         temp = unique(segments(min(xv):max(xv), min(yv):max(yv)));   
         ind = zeros(length(temp), 1);
         
-        % Temp contains sp indices which are not always sequential
-        % This converts them to sequentials i.e indices to the positions of
-        % the vector that contains the sp indices
+        % Ignore very small superpixels
         for t = 1:length(temp)
-            if ismember(find(spIndices == temp(t)), badSegments)
+            if ismember(temp(t), badSegments)
                 continue;
             end
-            ind(t) = find(spIndices == temp(t));
+            ind(t) = temp(t);
         end
         ind(ind==0) = [];
         grid(i).spixelsToAverage = ind;

@@ -23,9 +23,23 @@ for i = 1:size(iterator, 2);
     leftId = children(1);
     rightId = children(2);
    
-    current = node.cvData.validationIndex;
-    left = rtree.get(leftId).cvData.validationIndex;
-    right = rtree.get(rightId).cvData.validationIndex;
+    try
+        current = node.cvData.validationIndex;
+    catch
+        continue;
+    end
+    
+    try
+        left = rtree.get(leftId).cvData.validationIndex;
+    catch
+        left = [];
+    end
+    
+    try
+        right = rtree.get(rightId).cvData.validationIndex;
+    catch
+        right = [];
+    end
     
     if length(current) ~= length(left) + length(right)
         hasError = true;
@@ -37,9 +51,9 @@ for i = 1:size(iterator, 2);
         fprintf('Left and right have common points\n');
     end
     
-    if ~isequal(union(left,right),current)
+    if ~isequal(union(left,right, 'legacy'),current)
         hasError = true;
-        fprintf('Fuck\n');
+        fprintf('Union of children does not equal parent\n');
     end
     
 end
@@ -65,8 +79,17 @@ hasError = false;
 
 for l = 1:length(leafIndices)
     leaf = rtree.get(leafIndices(l));
-    s1 = s1 + length(leaf.trData.classIndex);
-    s2 = s2 + length(leaf.cvData.classIndex);
+    try
+        s1 = s1 + length(leaf.trData.classIndex);
+    catch
+
+    end
+    
+    try
+        s2 = s2 + length(leaf.cvData.classIndex);
+    catch
+
+    end
 end
 
 if s1 ~= t1

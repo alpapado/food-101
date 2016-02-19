@@ -10,7 +10,7 @@ l = params.encodingLength;
 m = matfile('data.mat');
 
 if ~exist('vset.mat', 'file')
-    [vset, vind] = sampleValidationSet(m, n, l); 
+    [vset, vind] = sampleValidationSet(m, n); 
     save('vset.mat', 'vset', 'vind');
     clear vset
 end
@@ -23,7 +23,7 @@ for i = 1:nTrees
         fprintf('Tree %d\n', i);
         
         % Sample training set
-        trset = sampleTrainingData(m, n, l, vind);
+        trset = sampleTrainingData(m, n, vind);
 
         % Train tree
         % Root node contains the entire training set
