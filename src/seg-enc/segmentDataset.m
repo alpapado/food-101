@@ -1,18 +1,16 @@
-function total = segmentDataset(params)
+function segmentDataset(params)
 %segmentDataset Performs segmentation on the food-101 dataset and saves
 %the results
 % INPUTS:
-%   datasetPath: Path to location of dataset
-%   classes: Class labels of the dataset
+%   params: Param struct
 % OUTPUTS:
-% total: Total number of superpixels in dataset
 
-total = 0;
-
-all = matfile('data.mat', 'Writable', true);
-all.features = single(zeros(1, params.encodingLength));
-all.classIndex = uint8(zeros(1, 1));
 classes = params.classes;
+
+fid = fopen('data/meta/all.txt');
+images = textscan(fid, '%s', 'Delimiter', '\n');
+imgSet = images{1};
+fclose(fid);
 
 if strcmp(params.encoding, 'sparse')
     encoding = 1;
@@ -20,47 +18,35 @@ elseif strcmp(params.encoding, 'fisher')
     encoding = 0;
 end
 
-for c = 1:length(classes)
-    currentClass = num2str(cell2mat(classes(c)));
-    imageFolder = [params.datasetPath '/' currentClass];
-    classImages = dir([imageFolder '/*jpg']);
-    tempFeatures = [];
-    tempLabels = [];
-    nImages = size(classImages, 1);
-    fprintf('Segment and encode %s \n', currentClass);
-    parfor i = 1:nImages
-%         fprintf('Segment and encode %s %d/%d\n', currentClass, i, nImages);  
-        
-        pathToImage = [imageFolder '/' classImages(i).name];
-        I = imread(pathToImage, 'jpg');
-        
-        try                     
-            L = segmentImage(I);
-            
-            if encoding
-                features = extractImageFeatures2(I, L, params);
-            else
-                features = extractImageFeatures(I, L, params);
-            end
-            
-            tempFeatures = [tempFeatures; features];
-            tempLabels = [tempLabels; zeros(size(features,1),1) + c];
-        catch ME          
-            disp(getReport(ME,'extended'));       
+features = [];
+classIndex = [];
+
+parfor i = 1:length(imgSet)
+    str = num2str(cell2mat(imgSet(i)));
+    imgPath = ['data/images/' str '.jpg'];
+    I = imread(imgPath);
+    split = strsplit(str, '/');
+    class = num2str(cell2mat(split(1)));
+    c = find(strcmp(classes, class));
+    
+    try                     
+        L = segmentImage(I);
+
+        if encoding
+            F = extractImageFeatures2(I, L, params);
+        else
+            F = extractImageFeatures(I, L, params);
         end
 
+        features = [features; F];
+        classIndex = [classIndex; uint8(zeros(size(F,1),1) + c)];
+    catch ME          
+        disp(getReport(ME,'extended'));       
     end
-    
-    % Write to file
-    new = size(tempFeatures, 1);
-    istart = total + 1;
-    iend = istart + new - 1;
-    total = total + new;
-
-    all.features(istart:iend, :) = single(tempFeatures);
-    all.classIndex(istart:iend, 1) = uint8(tempLabels);
-
 end
+
+% Write to file
+save('data.mat', 'features', 'classIndex');
 
 end
 
