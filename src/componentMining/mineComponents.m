@@ -28,7 +28,7 @@ for y = 1:nClasses
     
     % Prune sortedLeaves
     prunedLeaves = sortedLeaves;
-%     prunedLeaves = pruneLeaves(sortedLeaves);
+%     prunedLeaves = pruneLeaves(sortedLeaves, y);
     
     % Select top N (numComponents) leaves
     topLeaves = prunedLeaves(1:nComponents);

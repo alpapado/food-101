@@ -16,12 +16,15 @@ numSVMs = 100;
 
 % Set SVM parameters
 nData = length(trsetInd);
-nTrainingData = floor(0.1*nData);
+nTrainingData = min(floor(0.1*nData), 20*10^3);
 classes = trset.classIndex;
 
 X = trset.features(trsetInd, :);
 Y = trset.classIndex(trsetInd);
 
+perm = randperm(length(Y));
+X = X(perm,:);
+Y = Y(perm);
 % Remember to clear unwanted variables
 
 % NOTE TO SELF: X and testSet fit in memory (3.5 gb). The problem lies in
@@ -36,12 +39,10 @@ threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [],
 for i = 1:numSVMs
     
     % Generate random binary partition of class labels
-    y = Y(1:nTrainingData);
-    randMap = randi([0 1], 101, 1);
-    
-    for j = 1:101
-        y(y==j) = randMap(j);
-    end
+    y = binaryPartition(Y(1:nTrainingData));
+
+    fprintf('Training svm %d on %d instances...\n', i, nTrainingData);
+    fprintf('Positive %d - Negative %d \n', sum(y==1), sum(y==0));
     
     try
         % Train the SVM and discard training data
@@ -97,3 +98,23 @@ function E = entropy(X)
     probX = arrayfun(@(x)length(find(X==x)), unique(X)) / length(X);
     E = -sum(probX .* log2(probX));
 end
+
+function yb = binaryPartition(y)
+
+presentClasses = unique(y);
+yb = y;
+
+randMap = randi([0 1], length(presentClasses), 1);
+
+while length(unique(randMap)) == 1
+    fprintf('stuck\n');
+    disp(presentClasses);
+    randMap = randi([0 1], length(presentClasses), 1);
+end
+
+for j = 1:length(randMap)
+    yb(y==presentClasses(j)) = randMap(j);
+end
+
+end
+
