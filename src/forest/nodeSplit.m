@@ -16,15 +16,15 @@ numSVMs = 100;
 
 % Set SVM parameters
 nData = length(trsetInd);
-nTrainingData = min(floor(0.1*nData), 20*10^3);
+nTrainingData = min(nData, 20*10^3);
 classes = trset.classIndex;
 
 X = trset.features(trsetInd, :);
 Y = trset.classIndex(trsetInd);
 
-perm = randperm(length(Y));
-X = X(perm,:);
-Y = Y(perm);
+% perm = randperm(length(Y));
+% X = X(perm,:);
+% Y = Y(perm);
 % Remember to clear unwanted variables
 
 % NOTE TO SELF: X and testSet fit in memory (3.5 gb). The problem lies in
@@ -39,17 +39,19 @@ threadStruct(numSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [],
 for i = 1:numSVMs
     
     % Generate random binary partition of class labels
-    y = binaryPartition(Y(1:nTrainingData));
+    ind = randi([1 size(X,1)], nTrainingData, 1);
+    y = binaryPartition(Y(ind));
 
     fprintf('Training svm %d on %d instances...\n', i, nTrainingData);
     fprintf('Positive %d - Negative %d \n', sum(y==1), sum(y==0));
     
     try
         % Train the SVM and discard training data
-        model = train(double(y), sparse(double(X(1:nTrainingData, :))), '-s 2 -n 8 -q');
-        split = zeros(nData, 1);
-        split(1:length(y)) = y;
-        split(length(y)+1:end) = svmPredict(model, X(nTrainingData+1:end, :)); 
+        model = train(double(y), sparse(double(X(ind, :))), '-s 2 -n 8 -q');
+        split = svmPredict(model, X);
+%         split = zeros(nData, 1);
+%         split(1:length(y)) = y;
+%         split(length(y)+1:end) = svmPredict(model, X(nTrainingData+1:end, :)); 
     catch ME
         disp(getReport(ME,'extended'));
         continue;

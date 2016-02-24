@@ -1,21 +1,26 @@
-function features = extractImageFeatures(image, segments, params)
+function [features, badSegments, goodSegments] = extractImageFeatures(I, L, params, ignoreSmallSegments)
 %extractSuperpixelFeatures Extracts SURFs and Lab values for every 
 % superpixel in image
 
+if ~exist('ignoreSmallSegments', 'var')
+    ignoreSmallSegments = true;
+end
+
 % Preallocate space for result
-spIndices = unique(segments); % Superpixel indices are not always sequential
+spIndices = unique(L); % Superpixel indices are not always sequential
 numSuperpixels = length(spIndices);
 features = zeros(numSuperpixels, params.encodingLength);
+goodSegments = ones(numSuperpixels, 1);
 
 % Get image dimensions
 % Height is first ;( ;( ;(
-[height, width, channels] = size(image);
+[height, width, channels] = size(I);
 
 % Create grayscale version of input image
 if channels > 1
-    Igray = rgb2gray(image);
+    Igray = rgb2gray(I);
 else
-    Igray = image;
+    Igray = I;
 end
 
 gridStep = params.gridStep;
@@ -43,26 +48,28 @@ elseif strcmp(params.descriptorType, 'surf')
     
 end
 
-% whos
+badSegments = [];
+Xd = descriptors;
 
-nFrames = size(frames, 1);
+% -------------------Compute color values--------------------------
+poi = uint8(zeros(size(frames, 1), 3)); 
+for j = 1:size(frames, 1)          
+    poi(j,:) = I(frames(j, 2), frames(j, 1), :);
+end
+LABs = rgb2lab(poi);
+
+Xcolor = LABs;
+
 
 % For every superpixel
-for i = 1:numSuperpixels
-    s = spIndices(i); % Superpixel index
-    % Find spixel points and encode the surfs along with the lab values in
-    % these points
-    spPoints = uint32(zeros(nFrames, 1)); % Indexes into validPointsLocation matrix
-    k = 1;
+for i = 1:numSuperpixels       
+    % Superpixel index
+    s = spIndices(i);
 
-    for j = 1:nFrames
-        if segments(frames(j,2), frames(j,1)) == s
-            spPoints(k) = j;
-            k = k + 1;
-        end
-    end
-    spPoints(spPoints == 0) = [];
-
+    % --------------------Find spixel points---------------------------
+    linInd = sub2ind(size(L), frames(:,2), frames(:,1));
+    spPoints = find(L(linInd) == s); % Linear indices to L
+        
     if length(spPoints) >= modes
 
         % Order of calculations:
@@ -71,24 +78,9 @@ for i = 1:numSuperpixels
         % 2) PCA whitened data is ifv encoded
 
         % Step 0
-        tempFeatures = descriptors(spPoints, :);
+        tempFeatures = Xd(spPoints, :);
 
-        % original code
-%         poi = uint8(zeros(length(spPoints), 3)); 
-
-%       Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
-        poi = uint8(zeros(length(spPoints), 1, 3)); % Image region whose lab values to compute
-        
-        for j = 1:length(spPoints)
-            poi(j,1,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
-            
-            % original code
-%             poi(j,:) = image(frames(spPoints(j), 2), frames(spPoints(j), 1), :);
-        end
-%         LABs = rgb2lab(poi);
-
-%       Now squeeze out the singleton
-        LABs = squeeze(vl_xyz2lab(vl_rgb2xyz(poi)));
+        LABs = Xcolor(spPoints,:);
 
         % Step 1 and 2
         featureEncoding = ifvEncode(pcaw(tempFeatures, params.featurePca), params.featureGmm);
@@ -100,15 +92,22 @@ for i = 1:numSuperpixels
 %         J = step(markerInserter, label2rgb(segments==s), int32(frames(spPoints,:)));
 %         imshow(J);
 %         pause
-       fid = fopen('error.txt', 'a');
+       badSegments = [badSegments; s];
+       goodSegments(i) = 0;
+%        fid = fopen('error.txt', 'a');
 %        fprintf(fid, 'Image %s\n', imname);
-       fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(segments==s)));
-       fprintf(fid,'Superpixel %d has %d valid points \n', s, length(spPoints));
-       fprintf(fid,'Too few valid points for superpixel %d\n', s);
-       fclose(fid);
+%        fprintf(fid,'Superpixel %d has %d points \n', s, sum(sum(L==s)));
+%        fprintf(fid,'Superpixel %d has %d valid points \n', s, length(spPoints));
+%        fprintf(fid,'Too few valid points for superpixel %d\n', s);
+%        fclose(fid);
         continue;
     end
 end
+
+if ignoreSmallSegments == true
+    features( ~any(features,2), : ) = [];
+end
+
     
 end
 

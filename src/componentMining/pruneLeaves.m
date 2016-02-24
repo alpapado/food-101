@@ -14,6 +14,10 @@ toRemove = zeros(nLeaves, 1);
 for l = 2:nLeaves
     current = sortedLeaves(l);
     better = sortedLeaves(l-1:-1:1);
+    if isempty(current.cvData)
+        toRemove(l) = 1;
+        continue;
+    end
     classSamples = current.cvData.validationIndex(current.cvData.classIndex==class);
     
     % Compare current leaf with every better scoring leaf
