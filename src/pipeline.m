@@ -1,7 +1,7 @@
 load('classes.mat', 'classes');
 params = matfile('params.mat', 'Writable', true);
 params.classes = classes;
-params.nTrees = 20;
+params.nTrees = 30;
 params.treeSamples = 200000;
 params.nComponents = 20;
 params.nClasses = 101;
@@ -12,7 +12,7 @@ params.datasetPath = 'data/images';
 params.descriptorBases = 512;
 params.colorBases = 64;
 params.pooling = 'max';
-params.encoding = 'sparse';
+params.encoding = 'fisher';
 
 if strcmp(params.descriptorType, 'sift')
     params.descriptorLength = 128;
@@ -47,30 +47,30 @@ save('params.mat', '-struct', 'params');
 disp(params);
 
 % Generate random seed
-[~, seed] = system('od /dev/urandom --read-bytes=4 -tu | awk ''{print $2}''');
-seed = str2double(seed);
-rng(seed);
+rng('shuffle');
 
 % Compute bases
 if ~isfield(params, 'Bd') || ~isfield(params, 'Bc')
-    [Xd, Xc] = getFeatureSample(100, params.descriptorType, false);
+    [Xd, Xc] = getFeatureSample(500, params.descriptorType, false);
     [Bd, Bc] = computeBases(Xd, Xc, params.descriptorBases, params.colorBases);
     params.Bd = Bd;
     params.Bc = Bc;
     save('params.mat', '-struct', 'params');
 end
 
+% return;
+
 % Segment and encode dataset
 if ~exist('data.mat', 'file')
-    total = segmentDataset(params);
+    segmentDataset(params);
 end
-
+return;
 % Grow forest
-% if ~exist('trees.mat', 'file')
-%     trees = randomForest(params);
-% else
-    load('trees.mat');
-% end
+if ~exist('./trees.mat', 'file')
+   trees = randomForest(params);
+else
+   load('trees.mat');
+end
 
 if ~exist('vset', 'var')
     load('vset', 'vset');
@@ -88,11 +88,12 @@ if ~exist('metrics', 'var')
     metrics = load('metrics');
 end
  
+% repo = load('data.mat');
 models = mineComponents(leaves, metrics, vset, params);
 params.models = models;
 save('params.mat', '-struct', 'params');
 
-clear vset trset data
+%clear vset trset data
 
 trainFinalClassifier(params);
 clear;
