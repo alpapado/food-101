@@ -227,7 +227,7 @@ int parse_command_line(int nrhs, const mxArray *prhs[], char *model_file_name)
 			mexPrintf("Solver not specified. Using -s 2\n");
 			param.solver_type = L2R_L2LOSS_SVC;
 		}
-		else if(param.solver_type != L2R_LR && param.solver_type != L2R_L2LOSS_SVC && param.solver_type != L2R_L2LOSS_SVR)
+		else if(param.solver_type != L2R_LR && param.solver_type !=  L2R_L1LOSS_SVC_DUAL &&param.solver_type != L2R_L2LOSS_SVC && param.solver_type != L2R_L2LOSS_SVR)
 		{
 			mexPrintf("Parallel LIBLINEAR is only available for -s 0, 2, 11 now.\n");
 			return 1;
@@ -454,6 +454,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
             y[i] = Malloc(int, prob.l);
         }
 
+        double* map = Malloc(double, 101);
+
         #pragma omp parallel for private(i)
         for (i = 0; i < 100; i++){
             problem sub_prob_omp;
@@ -461,11 +463,16 @@ void mexFunction( int nlhs, mxArray *plhs[],
             sub_prob_omp.n = prob.n;
             sub_prob_omp.x = prob.x;
 
-            // Generate randoms in [0, 1] here
             sub_prob_omp.y = Malloc(double,prob.l);
 
+            // TODO Generate random binary partition
+            for (int j = 0; j < 101; j++){
+                map[j] = round( (double)rand() / (double)RAND_MAX );
+            }
+
+            // TODO Assign each present class to a binary label
             for (int j = 0; j < prob.l; j++){
-                sub_prob_omp.y[j] = round( (double)rand() / (double)RAND_MAX );
+                sub_prob_omp.y[j] = map[(int)prob.y[j]];
                 y[i][j] = sub_prob_omp.y[j];
             }
 
