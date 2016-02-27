@@ -382,8 +382,6 @@ void mexFunction( int nlhs, mxArray *plhs[],
 		int nrhs, const mxArray *prhs[] )
 {
 	const char *error_msg;
-	// fix random seed to have same results for each run
-	// (for cross validation)
 	srand(time(NULL));
 
 	if(nlhs > 2)
@@ -449,8 +447,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
         // if all has gone well, procede with training
         const char *error_msg;
         int i;
-
-        double* map = Malloc(double, 101);
+        
         omp_set_num_threads(param.nr_thread);
 
         #pragma omp parallel for private(i)
@@ -459,9 +456,9 @@ void mexFunction( int nlhs, mxArray *plhs[],
             sub_prob_omp.l = prob.l;
             sub_prob_omp.n = prob.n;
             sub_prob_omp.x = prob.x;
-
             sub_prob_omp.y = Malloc(double,prob.l);
 
+            double* map = Malloc(double, 101);
             int has0;
             int has1;
 
@@ -489,8 +486,6 @@ void mexFunction( int nlhs, mxArray *plhs[],
                 }
 
             } while(!has0 || !has1);
-
-            
 
             models[i] = train(&sub_prob_omp, &param);
         }

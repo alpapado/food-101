@@ -10,3 +10,4 @@ fast_sc/*
 GraphSeg/*
 *.sh
 *.log
+*.o
