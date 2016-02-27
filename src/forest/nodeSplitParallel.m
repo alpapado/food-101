@@ -25,12 +25,9 @@ classes = trset.classIndex;
 X = trset.features(trsetInd, :);
 Y = trset.classIndex(trsetInd);
 
-% Remember to clear unwanted variables
-
 % Initialize struct to be used by all the threads for result saving
 threadStruct(nSVMs) = struct('infoGain', 0, 'leftSplit', [], 'rightSplit', [], 'svm', []);
-ind = randi([1 size(X,1)], nTrainingData, 1);
-models = train_multi(double(Y(ind)), sparse(double(X(ind, :))), svmParams);
+models = train_multi(double(Y(1:nTrainingData)), sparse(double(X(1:nTrainingData, :))), svmParams);
 allSplits = svmPredict(models, X);
 
 for i = 1:nSVMs
