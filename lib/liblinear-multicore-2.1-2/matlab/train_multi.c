@@ -227,13 +227,13 @@ int parse_command_line(int nrhs, const mxArray *prhs[], char *model_file_name)
 			mexPrintf("Solver not specified. Using -s 2\n");
 			param.solver_type = L2R_L2LOSS_SVC;
 		}
-		else if(param.solver_type != L2R_LR && param.solver_type !=  L2R_L1LOSS_SVC_DUAL &&param.solver_type != L2R_L2LOSS_SVC && param.solver_type != L2R_L2LOSS_SVR)
+		else if(param.solver_type != L2R_LR && param.solver_type !=  L2R_L1LOSS_SVC_DUAL && param.solver_type != L2R_L2LOSS_SVC && param.solver_type != L2R_L2LOSS_SVR)
 		{
 			mexPrintf("Parallel LIBLINEAR is only available for -s 0, 2, 11 now.\n");
 			return 1;
 		}
 #ifndef CV_OMP
-		mexPrintf("Total threads used: %d\n", param.nr_thread);
+		//mexPrintf("Total threads used: %d\n", param.nr_thread);
 #endif
 	}
 #ifdef CV_OMP
@@ -449,12 +449,9 @@ void mexFunction( int nlhs, mxArray *plhs[],
         // if all has gone well, procede with training
         const char *error_msg;
         int i;
-        int** y = Malloc(int*, 100);
-        for (i = 0; i < 100; i++){
-            y[i] = Malloc(int, prob.l);
-        }
 
         double* map = Malloc(double, 101);
+        omp_set_num_threads(param.nr_thread);
 
         #pragma omp parallel for private(i)
         for (i = 0; i < 100; i++){
@@ -465,16 +462,35 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
             sub_prob_omp.y = Malloc(double,prob.l);
 
-            // TODO Generate random binary partition
-            for (int j = 0; j < 101; j++){
-                map[j] = round( (double)rand() / (double)RAND_MAX );
-            }
+            int has0;
+            int has1;
 
-            // TODO Assign each present class to a binary label
-            for (int j = 0; j < prob.l; j++){
-                sub_prob_omp.y[j] = map[(int)prob.y[j]];
-                y[i][j] = sub_prob_omp.y[j];
-            }
+            do {
+                // Generate random binary partition
+                for (int j = 0; j < 101; j++){
+                    map[j] = round( (double)rand() / (double)RAND_MAX );
+                }
+                
+                // Make sure both binary labels are present
+                has0 = 0;
+                has1 = 0;
+
+                // Assign each present class to a binary label
+                for (int j = 0; j < prob.l; j++){
+                    int k = (int) prob.y[j];
+
+                    if (map[k] == 0)
+                        has0 = 1;
+
+                    if (map[k] == 1)
+                        has1 = 1;
+
+                    sub_prob_omp.y[j] = map[k];
+                }
+
+            } while(!has0 || !has1);
+
+            
 
             models[i] = train(&sub_prob_omp, &param);
         }
@@ -485,8 +501,6 @@ void mexFunction( int nlhs, mxArray *plhs[],
         (void) prhs;
 
         plhs[0] = mxCreateStructArray(ndim, dims, NUMBER_OF_FIELDS, field_names); 
-        plhs[1] = mxCreateNumericMatrix(1, 100*prob.l, mxINT32_CLASS, mxREAL);
-        int* y_ptr = (int*) mxGetPr(plhs[1]);
 
         for (j = 0; j < 100; j++) {
             int k;
@@ -560,9 +574,6 @@ void mexFunction( int nlhs, mxArray *plhs[],
             mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
             out_id++;              
 
-            for (i = 0; i < prob.l; i++) {
-                y_ptr[i + j*prob.l] = y[j][i];
-            }
         }
         
 		destroy_param(&param);
