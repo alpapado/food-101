@@ -394,187 +394,192 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	// Transform the input Matrix to libsvm format
 	if(nrhs > 1 && nrhs < 5)
 	{
-		int err=0;
+            int err=0;
 
-		if(!mxIsDouble(prhs[0]) || !mxIsDouble(prhs[1]))
-		{
-			mexPrintf("Error: label vector and instance matrix must be double\n");
-			fake_answer(nlhs, plhs);
-			return;
-		}
+            if(!mxIsDouble(prhs[0]) || !mxIsDouble(prhs[1]))
+            {
+                    mexPrintf("Error: label vector and instance matrix must be double\n");
+                    fake_answer(nlhs, plhs);
+                    return;
+            }
 
-		if(mxIsSparse(prhs[0]))
-		{
-			mexPrintf("Error: label vector should not be in sparse format");
-			fake_answer(nlhs, plhs);
-			return;
-		}
+            if(mxIsSparse(prhs[0]))
+            {
+                    mexPrintf("Error: label vector should not be in sparse format");
+                    fake_answer(nlhs, plhs);
+                    return;
+            }
 
-		if(parse_command_line(nrhs, prhs, NULL))
-		{
-			exit_with_help();
-			destroy_param(&param);
-			fake_answer(nlhs, plhs);
-			return;
-		}
+            if(parse_command_line(nrhs, prhs, NULL))
+            {
+                    exit_with_help();
+                    destroy_param(&param);
+                    fake_answer(nlhs, plhs);
+                    return;
+            }
 
-		if(mxIsSparse(prhs[1]))
-			err = read_problem_sparse(prhs[0], prhs[1]);
-		else
-		{
-			mexPrintf("Training_instance_matrix must be sparse; "
-				"use sparse(Training_instance_matrix) first\n");
-			destroy_param(&param);
-			fake_answer(nlhs, plhs);
-			return;
-		}
+            if(mxIsSparse(prhs[1]))
+                    err = read_problem_sparse(prhs[0], prhs[1]);
+            else
+            {
+                    mexPrintf("Training_instance_matrix must be sparse; "
+                            "use sparse(Training_instance_matrix) first\n");
+                    destroy_param(&param);
+                    fake_answer(nlhs, plhs);
+                    return;
+            }
 
-		// train's original code
-		error_msg = check_parameter(&prob, &param);
+            // train's original code
+            error_msg = check_parameter(&prob, &param);
 
-		if(err || error_msg)
-		{
-			if (error_msg != NULL)
-				mexPrintf("Error: %s\n", error_msg);
-			destroy_param(&param);
-			free(prob.y);
-			free(prob.x);
-			free(x_space);
-			fake_answer(nlhs, plhs);
-			return;
-		}
+            if(err || error_msg)
+            {
+                    if (error_msg != NULL)
+                            mexPrintf("Error: %s\n", error_msg);
+                    destroy_param(&param);
+                    free(prob.y);
+                    free(prob.x);
+                    free(x_space);
+                    fake_answer(nlhs, plhs);
+                    return;
+            }
 
-        // if all has gone well, procede with training
-        const char *error_msg;
-        int i;
-        
-        omp_set_num_threads(param.nr_thread);
+            // if all has gone well, procede with training
+            int i;
+            
+            omp_set_num_threads(param.nr_thread);
 
-        #pragma omp parallel for private(i)
-        for (i = 0; i < 100; i++){
-            problem sub_prob_omp;
-            sub_prob_omp.l = prob.l;
-            sub_prob_omp.n = prob.n;
-            sub_prob_omp.x = prob.x;
-            sub_prob_omp.y = Malloc(double,prob.l);
+            #pragma omp parallel for private(i)
+            for (i = 0; i < 100; i++){
+                problem sub_prob_omp;
+                sub_prob_omp.l = prob.l;
+                sub_prob_omp.n = prob.n;
+                sub_prob_omp.x = prob.x;
+                sub_prob_omp.y = Malloc(double,prob.l);
 
-            double* map = Malloc(double, 101);
-            int has0;
-            int has1;
+                double* map = Malloc(double, 101);
+                int has0;
+                int has1;
 
-            do {
-                // Generate random binary partition
-                for (int jj = 0; jj < 101; jj++){
-                    map[jj] = round( (double)rand() / (double)RAND_MAX );
-                }
-                
-                // Make sure both binary labels are present
-                has0 = 0;
-                has1 = 0;
+                do {
+                    // Generate random binary partition
+                    for (int jj = 0; jj < 101; jj++){
+                        map[jj] = round( (double)rand() / (double)RAND_MAX );
+                    }
+                    
+                    // Make sure both binary labels are present
+                    has0 = 0;
+                    has1 = 0;
 
-                // Assign each present class to a binary label
-                for (int jj = 0; jj < prob.l; jj++){
-                    int map_index = (int) prob.y[jj];
+                    // Assign each present class to a binary label
+                    for (int jj = 0; jj < prob.l; jj++){
+                        int map_index = (int) prob.y[jj]; // This is between 1 and 101
 
-                    if (map[map_index] == 0)
-                        has0 = 1;
+                        if (map[map_index] == 0)
+                            has0 = 1;
 
-                    if (map[map_index] == 1)
-                        has1 = 1;
+                        if (map[map_index] == 1)
+                            has1 = 1;
 
-                    sub_prob_omp.y[jj] = map[map_index];
-                }
+                        // The -1 is to correct for the C indexing starting at 0
+                        sub_prob_omp.y[jj] = map[map_index-1];
+                    }
 
-            } while(!has0 || !has1);
+                } while(!has0 || !has1);
 
-            models[i] = train(&sub_prob_omp, &param);
-        }
+                models[i] = train(&sub_prob_omp, &param);
 
-        mwSize dims[2] = {1, 100};
-        mwSize ndim = 2;
-        mwIndex j;
-        (void) prhs;
+                free(map);
+                free(sub_prob_omp.y);
+            }
 
-        plhs[0] = mxCreateStructArray(ndim, dims, NUMBER_OF_FIELDS, field_names); 
+            mwSize dims[2] = {1, 100};
+            mwSize ndim = 2;
+            mwIndex j;
+            (void) prhs;
 
-        for (j = 0; j < 100; j++) {
-            int k;
-            int nr_w;
+            plhs[0] = mxCreateStructArray(ndim, dims, NUMBER_OF_FIELDS, field_names); 
+
             double *ptr;
-            mxArray *return_model, **rhs;
-            int out_id = 0;
-            int n, w_size;
+            mxArray **rhs;
             rhs = (mxArray **)mxMalloc(sizeof(mxArray *)*NUM_OF_RETURN_FIELD);
 
-            // Parameters
-            // for now, only solver_type is needed
-            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
-            ptr = mxGetPr(rhs[out_id]);
-            ptr[0] = models[j]->param.solver_type;
-            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
-            out_id++;
+            int nr_w;
+            int out_id;
+            int n, w_size;
+            
+            for (j = 0; j < 100; j++) {
+                out_id = 0;
 
-            // nr_class
-            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
-            ptr = mxGetPr(rhs[out_id]);
-            ptr[0] = models[j]->nr_class;
-            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
-            out_id++;
+                // Parameters
+                // for now, only solver_type is needed
+                rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+                ptr = mxGetPr(rhs[out_id]);
+                ptr[0] = models[j]->param.solver_type;
+                mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+                out_id++;
 
-            if(models[j]->nr_class==2 && models[j]->param.solver_type != MCSVM_CS)
-                    nr_w=1;
-            else
-                    nr_w=models[j]->nr_class;
+                // nr_class
+                rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+                ptr = mxGetPr(rhs[out_id]);
+                ptr[0] = models[j]->nr_class;
+                mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+                out_id++;
 
-            // nr_feature
-            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
-            ptr = mxGetPr(rhs[out_id]);
-            ptr[0] = models[j]->nr_feature;
-            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
-            out_id++;
+                if(models[j]->nr_class==2 && models[j]->param.solver_type != MCSVM_CS)
+                        nr_w=1;
+                else
+                        nr_w=models[j]->nr_class;
 
-            // bias
-            rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
-            ptr = mxGetPr(rhs[out_id]);
-            ptr[0] = models[j]->bias;
-            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
-            out_id++;
+                // nr_feature
+                rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+                ptr = mxGetPr(rhs[out_id]);
+                ptr[0] = models[j]->nr_feature;
+                mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+                out_id++;
 
-            if(models[j]->bias>=0)
-                    n=models[j]->nr_feature+1;
-            else
-                    n=models[j]->nr_feature;
+                // bias
+                rhs[out_id] = mxCreateDoubleMatrix(1, 1, mxREAL);
+                ptr = mxGetPr(rhs[out_id]);
+                ptr[0] = models[j]->bias;
+                mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+                out_id++;
 
-            w_size = n;
-            // Label
-            if(models[j]->label)
-            {
-                    rhs[out_id] = mxCreateDoubleMatrix(models[j]->nr_class, 1, mxREAL);
-                    ptr = mxGetPr(rhs[out_id]);
-                    for(i = 0; i < models[j]->nr_class; i++)
-                            ptr[i] = models[j]->label[i];
+                if(models[j]->bias>=0)
+                        n=models[j]->nr_feature+1;
+                else
+                        n=models[j]->nr_feature;
+
+                w_size = n;
+                // Label
+                if(models[j]->label)
+                {
+                        rhs[out_id] = mxCreateDoubleMatrix(models[j]->nr_class, 1, mxREAL);
+                        ptr = mxGetPr(rhs[out_id]);
+                        for(i = 0; i < models[j]->nr_class; i++)
+                                ptr[i] = models[j]->label[i];
+                }
+                else
+                        rhs[out_id] = mxCreateDoubleMatrix(0, 0, mxREAL);
+
+                mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+                out_id++;
+
+                // w
+                rhs[out_id] = mxCreateDoubleMatrix(nr_w, w_size, mxREAL);
+                ptr = mxGetPr(rhs[out_id]);
+                for(int k = 0; k < w_size*nr_w; k++)
+                        ptr[k]=models[j]->w[k];
+
+                mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
+                out_id++;              
+
             }
-            else
-                    rhs[out_id] = mxCreateDoubleMatrix(0, 0, mxREAL);
-
-            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
-            out_id++;
-
-            // w
-            rhs[out_id] = mxCreateDoubleMatrix(nr_w, w_size, mxREAL);
-            ptr = mxGetPr(rhs[out_id]);
-            for(int k = 0; k < w_size*nr_w; k++)
-                    ptr[k]=models[j]->w[k];
-
-            mxSetFieldByNumber(plhs[0], j, out_id, rhs[out_id]);
-            out_id++;              
-
-        }
-        
-		destroy_param(&param);
-		free(prob.y);
-		free(prob.x);
-		free(x_space);
+    
+            destroy_param(&param);
+            free(prob.y);
+            free(prob.x);
+            free(x_space);
 	}
 	else
 	{

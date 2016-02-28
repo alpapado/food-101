@@ -11,3 +11,6 @@ GraphSeg/*
 *.sh
 *.log
 *.o
+*.a
+lib/liblinear-multicore-2.1-2/matlab/Makefile
+*.swp
