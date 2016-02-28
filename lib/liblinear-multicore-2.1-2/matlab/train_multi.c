@@ -464,8 +464,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
             do {
                 // Generate random binary partition
-                for (int j = 0; j < 101; j++){
-                    map[j] = round( (double)rand() / (double)RAND_MAX );
+                for (int jj = 0; jj < 101; jj++){
+                    map[jj] = round( (double)rand() / (double)RAND_MAX );
                 }
                 
                 // Make sure both binary labels are present
@@ -473,16 +473,16 @@ void mexFunction( int nlhs, mxArray *plhs[],
                 has1 = 0;
 
                 // Assign each present class to a binary label
-                for (int j = 0; j < prob.l; j++){
-                    int k = (int) prob.y[j];
+                for (int jj = 0; jj < prob.l; jj++){
+                    int map_index = (int) prob.y[jj];
 
-                    if (map[k] == 0)
+                    if (map[map_index] == 0)
                         has0 = 1;
 
-                    if (map[k] == 1)
+                    if (map[map_index] == 1)
                         has1 = 1;
 
-                    sub_prob_omp.y[j] = map[k];
+                    sub_prob_omp.y[jj] = map[map_index];
                 }
 
             } while(!has0 || !has1);
