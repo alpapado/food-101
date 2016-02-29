@@ -48,7 +48,7 @@ function models = trainModels(topLeaves, class, vset)
 %   samples. The training procedure is further refined using hard negative
 %   mining.
 nModels = length(topLeaves);
-iterations = 0; % Hard negative iterations
+iterations = 10; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
 for i = 1:nModels
@@ -78,12 +78,13 @@ function model = hardNegativeMining(X, y, iterations)
     fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
    
     % <------ Balance the data ------>
-    imbalance = randi([50 150], 1, 1);
+    imbalance = randi([250 500], 1, 1);
     
     negativesToKeep = negatives(1:length(positives) + imbalance);
-    
+     
     % Remove the negative samples contained in the initial training set
     negativeTestVectors = negativeTestVectors(length(positives) + imbalance + 1:end, :);  
+    nTestNegatives = size(negativeTestVectors, 1);
     
     y = y([positives; negativesToKeep]);
     X = X([positives; negativesToKeep], :);
@@ -97,28 +98,25 @@ function model = hardNegativeMining(X, y, iterations)
     fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
     
     % Train model once
-    model = train(y, sparse(double(X)), '-s 2 -n 8 -q');
-%     [~,~,~,~,fmeasure] = evaluateModel(model, sparse(double(X)),  y);
-%     fprintf('FMeasure = %f - \n', fmeasure);
-    
+    model = train(y, sparse(double(X)), '-s 3 -q');
+
+    batchSize = ceil(nTestNegatives / iterations);
+
     for i = 1:iterations
-        nTestNegatives = size(negativeTestVectors, 1);    
-        tempX = negativeTestVectors;
-        tempY = zeros(nTestNegatives, 1);
+           
+        istart = (i-1)*batchSize + 1;
+        iend = min(istart+ batchSize-1, nTestNegatives);
         
-        positives = y == 1;
-        [predicted, accuracy] = evaluateModel(model, tempX,  tempY);
-        fprintf('Iteration %d accuracy = %f - \n', i, accuracy);
+        tempX = negativeTestVectors(istart:iend, :);
+        tempY = zeros(size(tempX,1), 1);
         
-        % Get false positives, add them to X and retrain the model
-        fp = predicted(~positives) == 1;
-        fprintf('False positives = %d\n', sum(fp));
+        Xnew = getTopFalsePositives( model, tempX, tempY);
         
-        X = [X; negativeTestVectors(fp, :)];
-        y = [y; tempY(fp)];
-       fprintf('negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
+        X = [X; Xnew];
+        y = [y; zeros(size(Xnew, 1), 1)];
+        fprintf('negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
         model = train(y, sparse(double(X)), '-s 3 -q');
-        negativeTestVectors(fp, :) = []; % Remove negatives
+
     end
     fprintf('\n');
 end
