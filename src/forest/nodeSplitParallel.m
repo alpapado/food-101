@@ -32,10 +32,9 @@ allSplits = svmPredict(models, X);
 
 for i = 1:nSVMs
     try
-        allSplits = svmPredict(models(i), X);
         % Calculate information gain
-        leftIndexes = trsetInd(allSplits == 0);
-        rightIndexes = trsetInd(allSplits == 1);
+        leftIndexes = trsetInd(allSplits(:,i) == 0);
+        rightIndexes = trsetInd(allSplits(:,i) == 1);
         leftClasses = classes(leftIndexes);
         rightClasses = classes(rightIndexes);
         threadStruct(i).infoGain = informationGain(classes(trsetInd), leftClasses, rightClasses);

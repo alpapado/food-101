@@ -6,13 +6,13 @@ function trset = sampleTrainingData(m, n, v)
 
 fprintf('Generating training set...');
 N = size(m, 'classIndex');
-randInd = randi([1 N(1)], n, 1);
+randInd = randperm(N(1), n);
 
 while ~isempty(intersect(randInd,v))
     [~, IA, ~] = intersect(randInd, v);
-    for i = IA
-        while ismember(randInd(i), v)
-            randInd(i) = randi([1 N(1)], 1, 1);
+    for i = 1:length(IA)
+        while ismember(randInd(IA(i)), v)
+            randInd(IA(i)) = randi([1 N(1)], 1, 1);
         end    
     end
 end

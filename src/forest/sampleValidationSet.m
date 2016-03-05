@@ -5,9 +5,8 @@ function [ vset, vind ] = sampleValidationSet( m, n)
 %   vind: Indices of total dataset, that belong to vset
 
 fprintf('Generating validation set...');
-info = whos(m, 'classIndex');
-vind = uint32(randi([1 info.size(1)], n, 1));
-
+N = size(m, 'classIndex');
+vind = uint32(randperm(N(1), n));
 features = m.features;
 classIndex = m.classIndex;
 
