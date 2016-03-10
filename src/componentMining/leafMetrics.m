@@ -1,12 +1,13 @@
-function metrics = leafMetrics( leaves, params )
+function metrics = leafMetrics(leaves, params)
 %leafMetrics Computes all the leaf metrics 
 %   The function computes the leaf metrics, classDistribution,
 %   classConfidence, delta and distinctiveness for set of leaves as defined
 %   by the first input for forest parameters given by the second input.
-metrics = struct('classDist', [], 'classConf', [], 'delta', [], 'distinct', []);
 
-[classConf, classDist, delta] = classConfidence(leaves, params);
-distinct = distinctiveness(leaves, classConf, delta, params);
+classDist = classDistribution(leaves, params.nClasses);
+delta = computeDeltas(leaves, params.treeSamples);
+classConf = classConfidence(classDist, delta, params.nTrees);
+distinct = distinctiveness(classConf, delta);
 
 metrics.classConf = classConf;
 metrics.classDist = classDist;
@@ -15,7 +16,7 @@ metrics.distinct = distinct;
 
 end
 
-function [classConf, classDist, delta] = classConfidence(leaves, params)
+function classConf = classConfidence(classDist, delta, nTrees)
 %classConfidence Calculates the class confidence scores for each sample in
 %the validation set
 %   The class confidence score for a sample s belonging in class y is 
@@ -27,22 +28,10 @@ function [classConf, classDist, delta] = classConfidence(leaves, params)
 % delta(l,s) : Auxilliary variable that indicates presence or not of sample
 % s in leaf l
 
-nTrees = params.nTrees;
-nClasses = params.nClasses;
-
-% nSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees;
-nSamples = params.treeSamples;
-classConf = single(zeros(nClasses, nSamples));
-
-classDist = classDistribution(leaves, nClasses);
-delta = computeDeltas(leaves, nTrees, params.treeSamples);
-
 fprintf('Calculating class confidence...');
 
 tic;
-for y = 1:nClasses
-    classConf(y,:) = classDist(y,:) * single(delta);
-end
+classConf = classDist * single(delta);
 toc;
 
 classConf = classConf ./ nTrees;
@@ -50,35 +39,27 @@ classConf = classConf ./ nTrees;
 
 end
 
-function classDist = classDistribution( leaves, nClasses )
+function classDist = classDistribution(leaves, nClasses)
 %classDistribution Returns the distributions of all classes in all the
 %leaves of the forest
 %  leaves : All the leaves in the forest
 %  nClasses : The number of the different food classes
-
 %  classDist : The class distributions of all the leaves
+
 fprintf('Calculating class distributions...');
 tic;
 nLeaves = length(leaves);
 classDist = single(zeros(nClasses, nLeaves));
 
-for l = 1:nLeaves
-    
-    if isempty(leaves(l).trData)
-        continue
-    end
-    
-    leafClasses = extractfield(leaves(l).trData, 'classIndex');
-
-    for y = 1:nClasses
-        classDist(y,l) = sum(leafClasses == y) / length(leafClasses);
-    end
+for l = 1:nLeaves       
+    bins = (1:101)';
+    h = histc(leaves(l).trData.classIndex, bins);
+    classDist(:, l) = h ./ sum(h);
 end
 toc;
-
 end
 
-function distinct = distinctiveness(leaves, classConf, delta, params)
+function distinct = distinctiveness(classConf, delta)
 %distinctiveness Calculates the distintiveness measuere for each
 %combination of leaf - class
 %   The distinctiveness measure for a leaf class combination shows how
@@ -86,23 +67,13 @@ function distinct = distinctiveness(leaves, classConf, delta, params)
 %   the particular leaf. Leaves with high distinctiveness are those which
 %   collect many discriminative samples i.e those that have a high class
 %   confidence score.
-
-nLeaves = size(leaves, 2);
-nClasses = params.nClasses;
-
-distinct = single(zeros(nLeaves, nClasses));
-
 fprintf('Calculating distinctiveness...');
 tic;
-
-for y = 1:nClasses
-    distinct(:,y) = classConf(y,:) * single(delta)';
-end
-
+distinct = single(delta) * classConf';
 toc;
 end
 
-function delta = computeDeltas(leaves, nTrees, nSamples)
+function delta = computeDeltas(leaves, nSamples)
 %computeDeltas Calculates the deltas for all combinations of samples and
 %leaves
 %   The deltas are a simple auxilliary variable that show whether or not a
@@ -116,15 +87,10 @@ fprintf('Computing deltas...');
 tic;
 nLeaves = length(leaves);
 
-
 % Number of samples in validation set
-% nSamples = length(extractfield(cell2mat(extractfield(leaves, 'cvData')), 'validationIndex')) ./ nTrees
 delta = uint8(zeros(nLeaves, nSamples));
 
 for l = 1:nLeaves
-    if isempty(leaves(l).cvData)
-        continue;
-    end
     sampleIds = leaves(l).cvData.validationIndex;  
     delta(l, sampleIds) = 1;
 end
