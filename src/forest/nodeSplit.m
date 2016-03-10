@@ -47,7 +47,7 @@ for i = 1:numSVMs
     
     try
         % Train the SVM and discard training data
-        model = train(double(y), sparse(double(X(ind, :))), '-s 2 -n 8 -q');
+        model = train(double(y), sparse(double(X(ind, :))), '-s 3 -q');
         split = svmPredict(model, X);
 %         split = zeros(nData, 1);
 %         split(1:length(y)) = y;

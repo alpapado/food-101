@@ -7,8 +7,8 @@ function trainFinalClassifier_mem(params)
 % results as the original it is imperative that no bad superpixels exist.
 
 components = params.models;
-% data = load('data');
-data = matfile('upload/data.mat');
+data = load('data');
+%data = matfile('data.mat');
 encodeImageSet('train', components, params, data);
 encodeImageSet('test', components, params, data);
 
@@ -45,8 +45,9 @@ d = nClasses * nComponents * numCells; % Dimensionality of feature vec
 
 load('index.mat');
 
-m.X = single(zeros(1, d));
-m.y = uint8(zeros(1, 1));
+X = single(zeros(nImages, d));
+y = uint8(zeros(nImages, 1));
+whos
 s = 1;
 for i = 1:nImages
     try
@@ -65,14 +66,20 @@ for i = 1:nImages
         iend = find(map(:,1)==index, 1, 'last' );
         F = data.features(istart:iend, :);
         
-        m.X(s,:) = transpose(extractImageFeatureVector_mem(I, F, params));
-        m.y(s,1) = uint8(find(strcmp(classes, class)));
+        X(s,:) = extractImageFeatureVector_mem(I, F, params);
+        y(s) = uint8(find(strcmp(classes, class)));
         s = s + 1;
         toc
     catch ME
         disp(getReport(ME,'extended'));
     end
 
+end
+
+if strcmp(type,'train')
+    save('train.mat', 'X', 'y', '-v7.3');
+elseif strcmp(type,'test');
+    save('test.mat', 'X', 'y', '-v7.3');
 end
 
 end

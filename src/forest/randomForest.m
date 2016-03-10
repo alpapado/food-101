@@ -11,7 +11,7 @@ m = matfile('data.mat');
 
 if ~exist('vset.mat', 'file')
     [vset, vind] = sampleValidationSet(m, n); 
-    save('vset.mat', 'vset', 'vind');
+    save('vset.mat', 'vset', 'vind', '-v7.3');
     clear vset
 end
 
@@ -52,7 +52,7 @@ for i = 1:nTrees
         trees(i).tree = rtree;
         trees(i).leaves = leaves;
 
-        save('trees', 'trees');
+        save('trees', 'trees', '-v7.3');
         t2 = toc(t1);
         fprintf('Total tree time %f\n', t2);
     catch ME
