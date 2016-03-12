@@ -1,4 +1,4 @@
-function F = extractImageFeatureVector_mem(I, features, params)
+function F = extractImageFeatureVector_mem(I, L, features, params)
 %extractImageFeatureVector_mem Faster version of extractImageFeatureVector
 
 pyramidLevels = params.pyramidLevels;
@@ -7,7 +7,7 @@ models = params.models;
 [nClasses, nComponents] = size(models);
 
 % Segment the image into superpixels
-L = segmentImage(I);
+%L = segmentImage(I);
 
 badSegments = [];
 

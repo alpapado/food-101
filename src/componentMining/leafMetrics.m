@@ -91,6 +91,9 @@ nLeaves = length(leaves);
 delta = uint8(zeros(nLeaves, nSamples));
 
 for l = 1:nLeaves
+    if isempty(leaves(l).cvData)
+        continue;
+    end
     sampleIds = leaves(l).cvData.validationIndex;  
     delta(l, sampleIds) = 1;
 end

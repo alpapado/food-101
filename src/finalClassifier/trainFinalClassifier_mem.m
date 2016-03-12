@@ -44,6 +44,7 @@ numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid
 d = nClasses * nComponents * numCells; % Dimensionality of feature vec
 
 load('index.mat');
+load('segments');
 
 X = single(zeros(nImages, d));
 y = uint8(zeros(nImages, 1));
@@ -66,7 +67,7 @@ for i = 1:nImages
         iend = find(map(:,1)==index, 1, 'last' );
         F = data.features(istart:iend, :);
         
-        X(s,:) = extractImageFeatureVector_mem(I, F, params);
+        X(s,:) = extractImageFeatureVector_mem(I, segments(index).L, F, params);
         y(s) = uint8(find(strcmp(classes, class)));
         s = s + 1;
         toc
