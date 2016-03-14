@@ -464,7 +464,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
                 do {
                     // Generate random binary partition
                     for (int jj = 0; jj < 101; jj++){
-                        map[jj] = round( (double)rand() / (double)RAND_MAX );
+                        //map[jj] = round( (double)rand() / (double)RAND_MAX );
+                        map[jj] = rand() % 2;
                     }
                     
                     // Make sure both binary labels are present
