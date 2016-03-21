@@ -455,6 +455,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
                 sub_prob_omp.l = prob.l;
                 sub_prob_omp.n = prob.n;
                 sub_prob_omp.x = prob.x;
+                sub_prob_omp.bias = prob.bias;
                 sub_prob_omp.y = Malloc(double,prob.l);
 
                 double* map = Malloc(double, 101);
