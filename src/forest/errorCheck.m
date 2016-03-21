@@ -5,6 +5,7 @@ function errorCheck( rtree )
 checkSpliting(rtree);
 checkLeaves(rtree);
 
+visualize(rtree);
 end
 
 
@@ -64,7 +65,6 @@ end
 
 end
 
-
 function checkLeaves(rtree)
 % Extract leaves
 leafIndices = rtree.findleaves();
@@ -104,6 +104,44 @@ end
 
 if ~hasError
    fprintf('No error in leaves\n'); 
+end
+
+end
+
+function visualize(rtree)
+
+iterator = rtree.depthfirstiterator;
+
+for i = 1:size(iterator, 2);
+    nodeId = iterator(i);
+    
+    if rtree.isleaf(nodeId)
+        continue;
+    end
+    
+    children = rtree.getchildren(nodeId);
+    leftId = children(1);
+    rightId = children(2);
+   
+%     left = histc(rtree.get(leftId).cvData.classIndex, 101);
+%     right = histc(rtree.get(rightId).cvData.classIndex, 101);
+%     dad = histc(rtree.get(nodeId).cvData.classIndex, 101);
+%     isequal(left+right, dad)
+    
+%     subplot(2,2,[1,2]); histogram(rtree.get(nodeId).cvData.classIndex, 101);
+%     subplot(2,2,3); histogram(rtree.get(leftId).cvData.classIndex, 101);
+%     subplot(2,2,4); histogram(rtree.get(rightId).cvData.classIndex, 101);
+%     
+%     figure(2)
+%     subplot(2,2,[1,2]); histogram(rtree.get(nodeId).trData.classIndex, 101);
+%     subplot(2,2,3); histogram(rtree.get(leftId).trData.classIndex, 101);
+%     subplot(2,2,4); histogram(rtree.get(rightId).trData.classIndex, 101);
+%     pause
+    
+    subplot(1,2,2); histogram(rtree.get(nodeId).trData.classIndex, 101); title('tr');
+    subplot(1,2,1); histogram(rtree.get(nodeId).cvData.classIndex, 101); title('cv');
+    isequal(histc(rtree.get(nodeId).trData.classIndex,101), histc(rtree.get(nodeId).cvData.classIndex,101))
+    pause
 end
 
 end

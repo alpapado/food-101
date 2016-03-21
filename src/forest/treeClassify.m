@@ -6,30 +6,31 @@ function [ rtree ] = treeClassify(rtree, vset)
 iterator = rtree.breadthfirstiterator;
 
 % Assign all the cv data to the root of the tree
-rootCvData = struct('validationIndex', 1:length(vset.classIndex), 'classIndex', extractfield(vset,'classIndex'));
+rootCvData = struct('validationIndex', 1:length(vset.classIndex), 'classIndex', vset.classIndex);
 temp = rtree.get(1);
 temp.cvData = rootCvData;
 rtree = rtree.set(1, temp);
 
-for n = iterator
+for n = iterator 
     try
         if rtree.isleaf(n)
             continue;
         end
-
-        node = rtree.get(n);    
-
+        
+        node = rtree.get(n);
+        
         if isempty(node.cvData)
           continue;
         end
 
         model = node.svm;
-
-        cvDataIndices = extractfield(node.cvData, 'validationIndex');
+        
+        cvDataIndices = node.cvData.validationIndex;
         X = vset.features(cvDataIndices, :);
 
         % Classify 
-        split = svmPredict(model, X);
+        split = svmPredict(model, X, false);
+
         cvLeft = cvDataIndices(split == 0);
         cvRight = cvDataIndices(split == 1);
         children = rtree.getchildren(n);
@@ -37,8 +38,9 @@ for n = iterator
         rightId = children(2);
 
 %         fprintf('Node %d has %d\n', n, length(cvDataIndices));
-%         fprintf('%d go to left (%d)- %d go to right(%d)\n', length(cvLeft), leftId, length(cvRight), rightId);
-
+%         fprintf('%d go to left (%d)- %d go to right(%d) (total=%d)\n', length(cvLeft), leftId, length(cvRight), rightId, length(cvLeft)+length(cvRight) );
+%         pause
+        
         % Assign cv data of children
         if ~isempty(cvLeft)
             childCvData = struct('validationIndex', cvLeft, 'classIndex', vset.classIndex(cvLeft));

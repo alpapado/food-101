@@ -1,4 +1,4 @@
-function [predictions, scores, probs] = svmPredict(models, X)
+function [predictions, scores, probs] = svmPredict(models, X, reverse)
 %SVMPREDICT returns a vector of predictions using a trained LINEAR SVM model
 %(svmTrain). 
 %   pred = SVMPREDICT(model, X) returns a vector of predictions using a 
@@ -9,6 +9,10 @@ function [predictions, scores, probs] = svmPredict(models, X)
 % NOTE svmPredict does not always produce correct predictions because the
 % class labels in the model struct, as returned by liblinear train, are
 % sometimes reversed. Use it only to calculate the svm scores efficiently.
+
+if nargin < 3
+    reverse = true;
+end
 
 nModels = length(models);
 m = size(X,1); % Instances
@@ -29,9 +33,14 @@ if nModels == 1
     % Convert predictions into 0 / 1
     scores = p;
         
-    if isequal(models.Label, [0; 1])
-        predictions(p >= 0) =  0;
-        predictions(p <  0) =  1;
+    if reverse
+        if isequal(models.Label, [0; 1])
+            predictions(p >= 0) =  0;
+            predictions(p <  0) =  1;
+        else
+            predictions(p >= 0) =  1;
+            predictions(p <  0) =  0;
+        end
     else
         predictions(p >= 0) =  1;
         predictions(p <  0) =  0;
