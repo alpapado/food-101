@@ -7,10 +7,11 @@ function Xr = ssrt(X)
 
 [m, n] = size(X);
 Xr = zeros(m, n);
+eps = 10^(-7);
 
 for i = 1:m
     l1 = norm(X(i,:), 1);
-    Xr(i,:) = sign(X(i,:)) .* sqrt( abs(X(i,:)./ l1) );
+    Xr(i,:) = sign(X(i,:)) .* sqrt( abs(X(i,:)./ (l1+eps)) );
 end
 
 

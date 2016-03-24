@@ -77,7 +77,7 @@ whos
 % 4) GMMs are computed on data from 3)
 
 % Step 0
-% allSifts = ssrt(allSifts);
+allFeatures = ssrt(allFeatures);
 modes = params.modes;
 
 % Step 1

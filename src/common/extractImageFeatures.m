@@ -49,7 +49,7 @@ elseif strcmp(params.descriptorType, 'surf')
 end
 
 badSegments = [];
-Xd = descriptors;
+Xd = ssrt(descriptors);
 
 % -------------------Compute color values--------------------------
 poi = uint8(zeros(size(frames, 1), 3)); 
