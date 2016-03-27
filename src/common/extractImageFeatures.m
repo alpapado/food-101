@@ -67,9 +67,29 @@ for i = 1:numSuperpixels
     s = spIndices(i);
 
     % --------------------Find spixel points---------------------------
-    linInd = sub2ind(size(L), frames(:,2), frames(:,1));
-    spPoints = find(L(linInd) == s); % Linear indices to L
-        
+%     linInd = sub2ind(size(L), frames(:,2), frames(:,1));
+%     spPoints1 = find(L(linInd) == s); % Linear indices to L
+    
+    % Compute superpixel bounding box
+    bbox = regionprops(L==s, 'BoundingBox');
+    xv = [bbox.BoundingBox(1); bbox.BoundingBox(1) + bbox.BoundingBox(3)];
+    yv = [bbox.BoundingBox(2); bbox.BoundingBox(2) + bbox.BoundingBox(4)];
+    roi = inpolygon(frames(:,1), frames(:,2), xv, yv);
+    spPoints = find(roi==1);
+
+%     markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
+%     J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
+%     imshow(J);
+%     figure(2)
+%     markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
+%     J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints1,:)));
+%     imshow(J);
+%     pause
+%     imshow(L==s)
+%     st = bbox;
+%     rectangle('Position',[st.BoundingBox(1),st.BoundingBox(2),st.BoundingBox(3),st.BoundingBox(4)],'EdgeColor','r','LineWidth',2 )
+%     pause
+    
     if length(spPoints) >= modes
 
         % Order of calculations:
