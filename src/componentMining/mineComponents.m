@@ -12,9 +12,8 @@ function components = mineComponents(leaves, metrics, vset, params)
 nClasses = params.nClasses;
 nComponents = params.nComponents;
 components(nClasses, nComponents) = struct('svm', []);
-
-
 distinct = metrics.distinct;
+data = load('data');
 
 % For a single class y, evaluate how many discriminative samples are
 % located in each leaf by considering distinct(l,c)
@@ -34,13 +33,13 @@ for y = 1:nClasses
     topLeaves = prunedLeaves(1:nComponents);
     
     % Train models for each top leaf
-    components(y,:) = trainModels(topLeaves, y, vset);
+    components(y,:) = trainModels(topLeaves, y, vset, data);
     toc;
 end
 
 end
 
-function models = trainModels(topLeaves, class, vset)
+function models = trainModels(topLeaves, class, vset, data)
 %trainModels For each leaf in the topLeaves list trains a SVM
 %   The samples belonging to the given class in each leaf are used as
 %   positive examples while a large repository of negative samples,
@@ -51,6 +50,9 @@ nModels = length(topLeaves);
 iterations = 10; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
+N = 100*10^3; % Pool size
+negatives = find(data.classIndex ~= class); % Get negative indices
+
 for i = 1:nModels
     leaf = topLeaves(i);
     
@@ -60,42 +62,31 @@ for i = 1:nModels
     X = vset.features(vind, :);
     y = transpose(double(leafClasses == class));
  
+    % Create large negative pool   
+    negatives = negatives(randperm(length(negatives))); % Shuffle pool
+    negatives = negatives(1:N); % Keep only N
+    negativePool = data.features(negatives, :); % Fill the pool
+    
     % Do hard negative mining
-    model = hardNegativeMining(X, y, iterations);
+    model = hardNegativeMining(X, y, iterations, negativePool);
     models(i).svm = model;
        
 end
 
 end
 
-function model = hardNegativeMining(X, y, iterations)
-    
-    % Negatives to be used for hard negative mining later
-    negativeTestVectors = X(y==0, :); 
+function model = hardNegativeMining(X, y, iterations, negativePool)
 
-    negatives = find(y==0);
-    positives = find(y==1);
-    fprintf('Initial negatives=%d  positives=%d\n', length(negatives), length(positives));
-   
-    % <------ Balance the data ------>
-    imbalance = randi([250 500], 1, 1);
-    
-    negativesToKeep = negatives(1:length(positives) + imbalance);
-     
-    % Remove the negative samples contained in the initial training set
-    negativeTestVectors = negativeTestVectors(length(positives) + imbalance + 1:end, :);  
+    pos = y==1;
+    X = X(pos, :);
+    y = y(pos);
+    X = [X; negativePool(1:2000, :)];
+    y = [y; zeros(2000, 1)];
+    negativeTestVectors = negativePool(2001:end, :);
     nTestNegatives = size(negativeTestVectors, 1);
     
-    y = y([positives; negativesToKeep]);
-    X = X([positives; negativesToKeep], :);
-    
-    % Shuffle 
-    permutation = randperm(length(y));
-    X = X(permutation, :);
-    y = y(permutation);
+    fprintf('negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
     % <------------------------------->
-   
-    fprintf('After balancing negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
     
     % Train model once
     model = train(y, sparse(double(X)), '-s 3 -q');
