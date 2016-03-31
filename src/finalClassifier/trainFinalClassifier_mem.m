@@ -38,7 +38,6 @@ fclose(fid);
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
 nImages = length(imgSet);
-
 [nClasses, nComponents] = size(components);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid
 d = nClasses * nComponents * numCells; % Dimensionality of feature vec
@@ -46,11 +45,12 @@ d = nClasses * nComponents * numCells; % Dimensionality of feature vec
 load('index.mat');
 load('segments');
 
-X = single(zeros(nImages, d));
-y = uint8(zeros(nImages, 1));
+step = 1;
+X = single(zeros(nImages/step, d));
+y = uint8(zeros(nImages/step, 1));
 whos
 s = 1;
-for i = 1:nImages
+for i = 1:step:nImages
     try
         tic
         fprintf('%d/%d ', i, nImages);
