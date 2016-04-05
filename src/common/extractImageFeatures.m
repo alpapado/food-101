@@ -25,30 +25,18 @@ end
 
 gridStep = params.gridStep;
 modes = params.modes;
-
-% SIFT
-if strcmp(params.descriptorType, 'sift')
-    binSize = 8;
-    [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
-
-    frames = transpose(frames);
-    descriptors = transpose(descriptors);
-    
-elseif strcmp(params.descriptorType, 'surf')
-    % Create grid on which the SURFs will be calculated
-    gridX = 1:gridStep:width;
-    gridY = 1:gridStep:height;
-    [x, y] = meshgrid(gridX, gridY);
-    gridLocations = [x(:), y(:)];
-
-    gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
-    [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
-
-    frames = validPoints.Location;
-    
-end
-
 badSegments = [];
+
+% Create grid on which the SURFs will be calculated
+gridX = 1:gridStep:width;
+gridY = 1:gridStep:height;
+[x, y] = meshgrid(gridX, gridY);
+gridLocations = [x(:), y(:)];
+
+gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
+[descriptors, validPoints] = extractFeatures(Igray, gridPoints);
+frames = validPoints.Location;
+
 Xd = ssrt(descriptors);
 
 % -------------------Compute color values--------------------------
@@ -56,19 +44,12 @@ poi = uint8(zeros(size(frames, 1), 3));
 for j = 1:size(frames, 1)          
     poi(j,:) = I(frames(j, 2), frames(j, 1), :);
 end
-LABs = rgb2lab(poi);
-
-Xcolor = LABs;
-
+Xcolor = rgb2lab(poi);
 
 % For every superpixel
 for i = 1:numSuperpixels       
     % Superpixel index
     s = spIndices(i);
-
-    % --------------------Find spixel points---------------------------
-%     linInd = sub2ind(size(L), frames(:,2), frames(:,1));
-%     spPoints1 = find(L(linInd) == s); % Linear indices to L
     
     % Compute superpixel bounding box
     bbox = regionprops(L==s, 'BoundingBox');
@@ -76,19 +57,6 @@ for i = 1:numSuperpixels
     yv = [bbox.BoundingBox(2); bbox.BoundingBox(2) + bbox.BoundingBox(4)];
     roi = inpolygon(frames(:,1), frames(:,2), xv, yv);
     spPoints = find(roi==1);
-
-%     markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-%     J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints,:)));
-%     imshow(J);
-%     figure(2)
-%     markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-%     J = step(markerInserter, label2rgb(L==s), int32(frames(spPoints1,:)));
-%     imshow(J);
-%     pause
-%     imshow(L==s)
-%     st = bbox;
-%     rectangle('Position',[st.BoundingBox(1),st.BoundingBox(2),st.BoundingBox(3),st.BoundingBox(4)],'EdgeColor','r','LineWidth',2 )
-%     pause
     
     if length(spPoints) >= modes
 
@@ -108,10 +76,6 @@ for i = 1:numSuperpixels
         features(i, :) = [featureEncoding; labEncoding];
 
     else
-%         markerInserter = vision.MarkerInserter('Shape','Circle','BorderColor','black');
-%         J = step(markerInserter, label2rgb(segments==s), int32(frames(spPoints,:)));
-%         imshow(J);
-%         pause
        badSegments = [badSegments; s];
        goodSegments(i) = 0;
 %        fid = fopen('error.txt', 'a');
