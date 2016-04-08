@@ -5,8 +5,8 @@ function prunedLeaves = pruneLeaves(sortedLeaves, class)
 %   descendingly based on score. So for every leaf, we just need to check
 %   only those before (that is with better score) it in the list
 
-fprintf('Pruning leaves\n');
-tic;
+% fprintf('Pruning leaves\n');
+% tic;
 nLeaves = length(sortedLeaves);
 toRemove = zeros(nLeaves, 1);
 
@@ -24,16 +24,21 @@ for l = 2:nLeaves
     % If it consists of more than half of the sample spixels as any leaf in
     % that list, mark it for removal.
     for i = 1:length(better)     
-        [~, IA, ~] = intersect(classSamples, better(i).cvData.validationIndex(better(i).cvData.classIndex == class));
-        if IA / length(classSamples) > 0.5
+        C = intersect(classSamples, better(i).cvData.validationIndex(better(i).cvData.classIndex == class));
+
+        if (length(C) / length(classSamples)) > 0.5
             toRemove(l) = 1;
             break;
         end
     end
+    
+    if l - sum(toRemove) > 20
+        break;
+    end
 end
 
 prunedLeaves = sortedLeaves(~toRemove);
-toc;
+% toc;
 
 end
 

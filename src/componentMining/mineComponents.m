@@ -23,30 +23,29 @@ for y = 1:nClasses
     % Sort leaves according to distinction score for current class
     distScore = distinct(:, y);
     [~, indexes] = sort(distScore, 'descend');
-    sortedLeaves = leaves(indexes);
+    sorted = leaves(indexes);
     
     % Prune sortedLeaves
-    prunedLeaves = sortedLeaves;
-%     prunedLeaves = pruneLeaves(sortedLeaves, y);
+    pruned = pruneLeaves(sorted, y);
     
     % Select top N (numComponents) leaves
-    topLeaves = prunedLeaves(1:nComponents);
+    top = pruned(1:nComponents);
     
     % Train models for each top leaf
-    components(y,:) = trainModels(topLeaves, y, vset, data);
+    components(y,:) = trainModels(top, y, vset, data);
     toc;
 end
 
 end
 
-function models = trainModels(topLeaves, class, vset, data)
+function models = trainModels(top, class, vset, data)
 %trainModels For each leaf in the topLeaves list trains a SVM
 %   The samples belonging to the given class in each leaf are used as
 %   positive examples while a large repository of negative samples,
 %   randomly selected from the entire trainingSet, is used as negative
 %   samples. The training procedure is further refined using hard negative
 %   mining.
-nModels = length(topLeaves);
+nModels = length(top);
 iterations = 10; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
@@ -54,7 +53,7 @@ N = 100*10^3; % Pool size
 negatives = find(data.classIndex ~= class); % Get negative indices
 
 for i = 1:nModels
-    leaf = topLeaves(i);
+    leaf = top(i);
     
     leafClasses = transpose(leaf.cvData.classIndex);
     vind = leaf.cvData.validationIndex;
