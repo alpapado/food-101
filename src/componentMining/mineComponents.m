@@ -13,7 +13,6 @@ nClasses = params.nClasses;
 nComponents = params.nComponents;
 components(nClasses, nComponents) = struct('svm', []);
 distinct = metrics.distinct;
-data = load('data');
 
 % For a single class y, evaluate how many discriminative samples are
 % located in each leaf by considering distinct(l,c)
@@ -32,13 +31,13 @@ for y = 1:nClasses
     top = pruned(1:nComponents);
     
     % Train models for each top leaf
-    components(y,:) = trainModels(top, y, vset, data);
+    components(y,:) = trainModels(top, y, vset);
     toc;
 end
 
 end
 
-function models = trainModels(top, class, vset, data)
+function models = trainModels(top, class, vset)
 %trainModels For each leaf in the topLeaves list trains a SVM
 %   The samples belonging to the given class in each leaf are used as
 %   positive examples while a large repository of negative samples,
@@ -49,8 +48,7 @@ nModels = length(top);
 iterations = 10; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
-N = 100*10^3; % Pool size
-negatives = find(data.classIndex ~= class); % Get negative indices
+negatives = find(vset.classIndex ~= class); % Get negative indices
 
 for i = 1:nModels
     leaf = top(i);
@@ -61,10 +59,8 @@ for i = 1:nModels
     X = vset.features(vind, :);
     y = transpose(double(leafClasses == class));
  
-    % Create large negative pool   
-    negatives = negatives(randperm(length(negatives))); % Shuffle pool
-    negatives = negatives(1:N); % Keep only N
-    negativePool = data.features(negatives, :); % Fill the pool
+    % Create large negative pool
+    negativePool = vset.features(negatives, :); % Fill the pool
     
     % Do hard negative mining
     model = hardNegativeMining(X, y, iterations, negativePool);
