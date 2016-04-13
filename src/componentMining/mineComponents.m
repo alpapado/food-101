@@ -48,7 +48,7 @@ nModels = length(top);
 iterations = 10; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
-negatives = find(vset.classIndex ~= class); % Get negative indices
+negatives = (vset.classIndex ~= class); % Get negative indices
 
 for i = 1:nModels
     leaf = top(i);
@@ -67,6 +67,9 @@ for i = 1:nModels
     models(i).svm = model;
        
 end
+
+models = models';
+models = cell2mat(extractfield(models(:), 'svm'));
 
 end
 

@@ -12,7 +12,7 @@ models = params.models;
 badSegments = [];
 
 % Calculate the score matrix
-scores = imageScore(models, features);
+scores = features * params.W;
 
 % Calculate the spatial pyramid grid
 grid = spatialPyramid(pyramidLevels, I, L, badSegments);

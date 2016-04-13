@@ -8,7 +8,7 @@ function trainFinalClassifier_mem(params)
 
 components = params.models;
 data = load('data');
-%data = matfile('data.mat');
+% data = matfile('data.mat');
 encodeImageSet('train', components, params, data);
 encodeImageSet('test', components, params, data);
 
@@ -18,12 +18,8 @@ function encodeImageSet(type, components, params, data)
 
 if strcmp(type,'train')
   fid = fopen('data/meta/train.txt');
-  m = matfile('./train.mat', 'Writable', true);
-%   nImages = 1500;
 elseif strcmp(type,'test');
   fid = fopen('data/meta/test.txt');
-  m = matfile('./test.mat', 'Writable', true);
-%   nImages = 500;
 end
 
 images = textscan(fid, '%s', 'Delimiter', '\n');
@@ -48,8 +44,8 @@ load('segments');
 step = 1;
 X = single(zeros(nImages/step, d));
 y = uint8(zeros(nImages/step, 1));
-whos
 s = 1;
+
 for i = 1:step:nImages
     try
         tic

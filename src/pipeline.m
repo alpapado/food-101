@@ -29,6 +29,7 @@ if ~exist('metrics', 'var')
 end
  
 models = mineComponents(leaves, metrics, vset, params);
+params.W = reshape(extractfield(models, 'w'), [params.encodingLength length(models)]);
 params.models = models;
 save('params.mat', '-struct', 'params');
 
