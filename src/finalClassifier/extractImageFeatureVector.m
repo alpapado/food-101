@@ -24,10 +24,11 @@ models = params.models;
 L = segmentImage(I);
 
 % Compute the features for all superpixels
-[features, badSegments] = extractImageFeatures2(I, L, params, false);
+[features, badSegments] = extractImageFeatures(I, L, params, false);
 
 % Calculate the score matrix
-scores = imageScore(models, features);
+% scores = imageScore(models, features);
+scores = features * params.W;
 
 % Calculate the spatial pyramid grid
 grid = spatialPyramid(pyramidLevels, I, L, badSegments);
@@ -35,10 +36,27 @@ grid = spatialPyramid(pyramidLevels, I, L, badSegments);
 % Preallocation
 F = single(zeros(nClasses * nComponents * numCells, 1));
 
+% seg = unique(L);
+% 
+% Iseg = vl_imseg(im2double(I), L);
+% 
+% for i = 1:length(unique(L))
+%     s = seg(i);
+%     [r, c]= find(L==s);
+% %     size([r c])
+%     subplot(2,2,1); subimage(I);
+%     J = insertMarker(Iseg, int32([c r]), 'color', 'red');
+%     subplot(2,2,2); subimage(J);
+%     subplot(2,2,[3, 4]); bar(scores(s, 1:20));
+%     pause
+% end
+
+
 i = 0;
 for gridCell = grid
     ind = gridCell.spixelsToAverage;
     X = scores(ind, :);
+    
     av = mean(X, 1);
     
     iStart = i * nClasses * nComponents + 1;

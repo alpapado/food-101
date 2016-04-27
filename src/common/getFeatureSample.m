@@ -1,4 +1,4 @@
-function [Xd, Xc] = getFeatureSample( nImages, descriptorType, normalize )
+function [Xd, Xc] = getFeatureSample(nImages)
 %GETFEATURESAMPLE Return sample of descriptors and color values
 %   getFeatureSample computes descriptor and color values from a number of
 %   images defined by nImages. The descriptor to use is defined by the
@@ -8,10 +8,6 @@ function [Xd, Xc] = getFeatureSample( nImages, descriptorType, normalize )
 [~, w] = unix('find data/images -name "*jpg"');
 list = strsplit(w, '\n'); % list of image encodings
 list(end) = []; % last is empty
-
-if ~exist('normalize', 'var')
-    normalize = false;
-end
 
 ind = randi([1 length(list)], nImages, 1);
 Xd = [];
@@ -32,20 +28,13 @@ parfor i = 1:length(ind)
         continue;
     end     
     
-    if strcmp(descriptorType, 'sift')      
-        binSize = 8;
-        [frames, descriptors] = vl_dsift(single(Igray), 'size', binSize, 'fast', 'step', gridStep, 'FloatDescriptors');
-        frames = transpose(frames);
-        descriptors = transpose(descriptors);          
-    elseif strcmp(descriptorType, 'surf')     
-        gridX = 1:gridStep:width;
-        gridY = 1:gridStep:height;
-        [x, y] = meshgrid(gridX, gridY);
-        gridLocations = [x(:), y(:)];
-        gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
-        [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
-        frames = validPoints.Location;     
-    end
+    gridX = 1:gridStep:width;
+    gridY = 1:gridStep:height;
+    [x, y] = meshgrid(gridX, gridY);
+    gridLocations = [x(:), y(:)];
+    gridPoints = SURFPoints(gridLocations, 'Scale', 1.6);
+    [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
+    frames = validPoints.Location;
 
 %   Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
     poi = uint8(zeros(size(frames, 1), 3)); % Image region whose lab values to compute
@@ -68,13 +57,7 @@ delete(gcp);
 Xd = Xd(randperm(size(Xd,1)), :);
 Xc = Xc(randperm(size(Xc,1)), :);
 
-if normalize
-    Xd = transpose(featureNormalize(Xd));
-    Xc = transpose(featureNormalize(Xc));
-else
-    Xd = transpose(Xd);
-    Xc = transpose(Xc);
-end
+Xd = ssrt(Xd);
 
 end
 
