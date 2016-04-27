@@ -11,8 +11,8 @@ params.descriptorType = 'surf';
 params.gridStep = 4;
 params.pyramidLevels = 3;
 params.datasetPath = 'data/images';
-params.descriptorBases = 512;
-params.colorBases = 64;
+params.descriptorBases = 5000;
+params.colorBases = 1024;
 params.pooling = 'max';
 params.encoding = 'fisher';
 
@@ -51,8 +51,8 @@ save('params.mat', '-struct', 'params');
 rng('shuffle');
 
 % Compute bases
-if ~isfield(params, 'Bd') || ~isfield(params, 'Bc')
-    [Xd, Xc] = getFeatureSample(500, params.descriptorType, false);
+if ~isfield(params, 'Bd') || ~isfield(params, 'Bc') && strcmp(params.encoding, 'sparse')
+    [Xd, Xc] = getFeatureSample(500);
     [Bd, Bc] = computeBases(Xd, Xc, params.descriptorBases, params.colorBases);
     params.Bd = Bd;
     params.Bc = Bc;

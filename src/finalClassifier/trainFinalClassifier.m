@@ -11,11 +11,9 @@ function encodeImageSet(type, components, params)
 if strcmp(type,'train')
   fid = fopen('data/meta/train.txt');
   m = matfile('./train.mat', 'Writable', true);
-%   nImages = 2250;
 elseif strcmp(type,'test');
   fid = fopen('data/meta/test.txt');
   m = matfile('./test.mat', 'Writable', true);
-%   nImages = 750;
 end
 
 images = textscan(fid, '%s', 'Delimiter', '\n');
@@ -47,9 +45,6 @@ for i = 1:nImages
         toc
     catch ME
         disp(getReport(ME,'extended'));
-        size(m.X(i,:))
-        size(extractImageFeatureVector(I, params));
-        pause
     end
 
 end
