@@ -25,7 +25,8 @@ for y = 1:nClasses
     sorted = leaves(indexes);
     
     % Prune sortedLeaves
-    pruned = pruneLeaves(sorted, y);
+    %pruned = pruneLeaves(sorted, y);
+    pruned = sorted;
     
     % Select top N (numComponents) leaves
     top = pruned(1:nComponents);
@@ -45,7 +46,7 @@ function models = trainModels(top, class, vset)
 %   samples. The training procedure is further refined using hard negative
 %   mining.
 nModels = length(top);
-iterations = 10; % Hard negative iterations
+iterations = 20; % Hard negative iterations
 models(nModels) = struct('svm', []);
 
 negatives = (vset.classIndex ~= class); % Get negative indices
@@ -67,9 +68,6 @@ for i = 1:nModels
     models(i).svm = model;
        
 end
-
-models = models';
-models = cell2mat(extractfield(models(:), 'svm'));
 
 end
 
@@ -105,6 +103,10 @@ function model = hardNegativeMining(X, y, iterations, negativePool)
         y = [y; zeros(size(Xnew, 1), 1)];
         fprintf('negatives=%d  positives=%d\n', length(find(y==0)), length(find(y==1)));
         model = train(y, sparse(double(X)), '-s 3 -q');
+
+        if size(Xnew, 1) < 5
+            break;
+        end
 
     end
     fprintf('\n');
