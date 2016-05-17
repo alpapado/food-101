@@ -22,11 +22,6 @@ leaves = cell2mat(extractfield(trees, 'leaves'));
 clear trees;
 
 metrics = leafMetrics( leaves, params );
-save('metrics.mat', '-struct', 'metrics');
- 
-if ~exist('metrics', 'var')
-    metrics = load('metrics');
-end
  
 models = mineComponents(leaves, metrics, vset, params);
 params.W = reshape(extractfield(models, 'w'), [params.encodingLength length(models)]);
