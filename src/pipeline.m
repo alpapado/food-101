@@ -1,18 +1,22 @@
+% Full pipeline of the Random Forest Discriminative Components Algorithm
+% with reference to the sections of the original paper "Food-101: Mining
+% Discriminative components with Random Forests"
+
+%% Set params %%
 params = setParams();
 
-% Segment and encode dataset
+%% Segment and encode dataset %%
 if ~exist('data.mat', 'file')
-%    segmentDataset(params);
+   segmentDataset(params);
 end
 
-% Grow forest
-if ~exist('./trees.mat', 'file')
-%   trees = randomForest(params);
+%% Grow forest (Section 4.1) %%
+if ~exist('trees.mat', 'file')
+   trees = randomForest(params);
 else
-%   load('trees.mat');
+   load('trees.mat');
 end
 
-load trees
 params.nTrees = length(trees);
 if ~exist('vset', 'var')
     load('vset', 'vset');
@@ -21,28 +25,14 @@ end
 leaves = cell2mat(extractfield(trees, 'leaves'));
 clear trees;
 
+%% Mining components (Section 4.2) %%
 metrics = leafMetrics( leaves, params );
  
+%% Model training (Section 4.3) %%
 models = mineComponents(leaves, metrics, vset, params);
 params.W = reshape(extractfield(models, 'w'), [params.encodingLength length(models)]);
 params.models = models;
 save('params.mat', '-struct', 'params');
 
-trainFinalClassifier_mem(params);
-clear;
- 
-load('train.mat');
-
-fprintf('Loaded training set\n');
-whos
-tic;
-model = train(double(y), sparse(double(X)), '-s 2 -n 64 -q');
-toc;
-save('model', 'model');
-
-clear X y
-load('test.mat');
-load('model');
-fprintf('Loaded test set\n');
-[pred, acc, prob] = predict(double(y), sparse(double(X)), model);
-exit;
+%% Training of the final classifier %%
+trainFinalClassifier(params);

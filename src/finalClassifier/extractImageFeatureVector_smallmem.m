@@ -1,6 +1,7 @@
-function F = extractImageFeatureVector(I, L, features, params)
-%extractImageFeatureVector_mem Faster version of extractImageFeatureVector
-%   extractImageFeatureVector returns the final feature 
+function F = extractImageFeatureVector_smallmem(I, params)
+%extractImageFeatureVector_smallmem Extract the image feature vector for final
+%classification
+%   extractImageFeatureVector_smallmem(I, params) returns the final feature 
 % vector for the image I, that can be used in classification. Firstly, the 
 % image is segmented into superpixels. For these superpixels features over
 % a grid are computed. The features of each superpixels are sparse encoded
@@ -20,11 +21,13 @@ models = params.models;
 [nClasses, nComponents] = size(models);
 
 % Segment the image into superpixels
-%L = segmentImage(I);
+L = segmentImage(I);
 
-badSegments = [];
+% Compute the features for all superpixels
+[features, badSegments] = extractImageFeatures(I, L, params, false);
 
 % Calculate the score matrix
+% scores = imageScore(models, features);
 scores = features * params.W;
 
 % Calculate the spatial pyramid grid
@@ -47,4 +50,3 @@ for gridCell = grid
 end
 
 end
-

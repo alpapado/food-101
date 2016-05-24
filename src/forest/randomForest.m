@@ -1,12 +1,11 @@
 function trees = randomForest(params)
 %randomForest Grows a random forest
-%   numTrees : Number of trees in forest
-%   n : Number of training data for a tree
+%   params.nTrees : Number of trees in forest
+%   params.treeSamples : Number of training data for a tree
 nTrees = params.nTrees;
 trees(nTrees) = struct('tree', [], 'leaves', []);
 
 n = params.treeSamples;
-l = params.encodingLength;
 m = matfile('data.mat');
 
 if ~exist('vset.mat', 'file')

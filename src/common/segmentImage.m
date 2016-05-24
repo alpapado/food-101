@@ -7,7 +7,7 @@ function L = segmentImage(I)
 [height, width, ~] = size(I);
 sigma = 0.1;
 kappa = 300;
-minSize = height * width / 100;
+minSize = height * width * 0.01;
 
 L = segmentFelzenszwalb(I, sigma, kappa, minSize) + 1;
 

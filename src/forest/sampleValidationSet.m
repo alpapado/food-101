@@ -1,4 +1,4 @@
-function [ vset, vind ] = sampleValidationSet( m, n)
+function [ vset, vind ] = sampleValidationSet(m, n)
 %sampleValidationSet Samples n samples from file m, to be used as
 %validation
 %   vset: Validation set

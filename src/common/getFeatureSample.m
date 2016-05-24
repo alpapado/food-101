@@ -1,8 +1,7 @@
 function [Xd, Xc] = getFeatureSample(nImages)
 %GETFEATURESAMPLE Return sample of descriptors and color values
 %   getFeatureSample computes descriptor and color values from a number of
-%   images defined by nImages. The descriptor to use is defined by the
-%   descriptorType variable and can be either 'sift' or 'surf'. The color
+%   images defined by nImages. The descriptor to use  the 'surf'. The color
 %   values are computed in the lab color space.
 
 [~, w] = unix('find data/images -name "*jpg"');
@@ -36,14 +35,13 @@ parfor i = 1:length(ind)
     [descriptors, validPoints] = extractFeatures(Igray, gridPoints);
     frames = validPoints.Location;
 
-%   Add a singleton dimension to be able convert to lab using vlfeat instead of matlab
-    poi = uint8(zeros(size(frames, 1), 3)); % Image region whose lab values to compute
+    % Image region whose lab values to compute
+    poi = uint8(zeros(size(frames, 1), 3)); 
 
     for j = 1:size(frames,1)
         poi(j,:) = I(frames(j, 2), frames(j, 1), :);
     end
 
-%   Now squeeze out the singleton
     color = rgb2lab(poi);
     
     Xd = [Xd; descriptors];
@@ -51,12 +49,9 @@ parfor i = 1:length(ind)
 
 end
 
-whos
 delete(gcp);
 
-Xd = Xd(randperm(size(Xd,1)), :);
-Xc = Xc(randperm(size(Xc,1)), :);
-
+% Transform SURF to RootSURF
 Xd = ssrt(Xd);
 
 end
