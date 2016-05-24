@@ -1,15 +1,7 @@
 # food-101
-Mining Discriminative Components with Random Forests - Matlab Implementation
+Mining Discriminative Components with Random Forests
 
-In this paper we address the problem of automatically rec-
-ognizing pictured dishes. To this end, we introduce a novel method to
-mine discriminative parts using Random Forests (rf), which allows us
-to mine for parts simultaneously for all classes and to share knowledge
-among them. To improve efficiency of mining and classification, we only
-consider patches that are aligned with image superpixels, which we call
-components. To measure the performance of our rf component mining
-for  food  recognition, we introduce a novel and challenging  dataset of
-101 food categories, with 101'000 images.
+A Matlab implementation of the Random Forest Discriminative Components algorithm described in [[1]](http://www.vision.ee.ethz.ch/datasets/food-101/static/bossard_eccv14_food-101.pdf). The implementation achieves about 46% accuracy on the challenging food-101 dataset which contains 101000 images of 101 food categories. The dataset can be found [here](http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz).
 
 References:
 * http://www.vision.ee.ethz.ch/datasets/food-101/static/bossard_eccv14_food-101.pdf
