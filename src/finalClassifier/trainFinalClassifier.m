@@ -27,19 +27,23 @@ end
 function encodeImageSet(type, components, params, data)
 
 if strcmp(type,'train')
-  fid = fopen('data/meta/train.txt');
+%   fid = fopen('data/meta/train.txt');
+  start = 1;
 elseif strcmp(type,'test');
-  fid = fopen('data/meta/test.txt');
+%   fid = fopen('data/meta/test.txt');
+  start = 75001;
 end
 
-images = textscan(fid, '%s', 'Delimiter', '\n');
-fclose(fid);
-imgSet = images{1};
+% images = textscan(fid, '%s', 'Delimiter', '\n');
+% fclose(fid);
+% imgSet = images{1};
 
 fid = fopen('data/meta/all.txt');
 images = textscan(fid, '%s', 'Delimiter', '\n');
 allSet = images{1};
 fclose(fid);
+
+imgSet = allSet;
 
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
@@ -56,7 +60,7 @@ X = single(zeros(nImages/step, d));
 y = uint8(zeros(nImages/step, 1));
 s = 1;
 
-for i = 1:step:nImages
+for i = start:step:start+nImages-1
     try
         tic
         fprintf('%d/%d ', i, nImages);
@@ -66,9 +70,10 @@ for i = 1:step:nImages
         imgPath = ['data/images/' str '.jpg'];
         I = imread(imgPath);
               
-        [~, indexC] = ismember(allSet, imgSet(i));
-        index = find(indexC ~= 0);
+%         [~, indexC] = ismember(allSet, imgSet(i));
+%         index = find(indexC ~= 0);
         
+        index = i;
         istart = find(map(:,1)==index, 1 );
         iend = find(map(:,1)==index, 1, 'last' );
         F = data.features(istart:iend, :);
