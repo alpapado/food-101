@@ -7,7 +7,7 @@ labGmm = struct('means', [], 'covariances', [], 'priors', []);
 featurePca = struct('avg', [], 'U', [], 'S', []);
 labPca = struct('avg', [], 'U', [], 'S', []);
 
-[Xd, Xc] = getFeatureSample(nImages);
+[Xd, Xc] = getFeatureSample(2000);
 
 % Order of calculations:
 % 0) SURFs are transformed using signed square rooting (done in

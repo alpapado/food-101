@@ -4,18 +4,25 @@ function [Xd, Xc] = getFeatureSample(nImages)
 %   images defined by nImages. The descriptor to use  the 'surf'. The color
 %   values are computed in the lab color space.
 
-[~, w] = unix('find data/images -name "*jpg"');
-list = strsplit(w, '\n'); % list of image encodings
-list(end) = []; % last is empty
+% [~, w] = unix('find data/images -name "*jpg"');
+% list = strsplit(w, '\n'); % list of image encodings
+% list(end) = []; % last is empty
 
-ind = randi([1 length(list)], nImages, 1);
+fid = fopen('data/meta/all.txt');
+images = textscan(fid, '%s', 'Delimiter', '\n');
+imgSet = images{1};
+fclose(fid);
+
+ind = randi([1 length(imgSet)], nImages, 1);
 Xd = [];
 Xc = [];
 
-gridStep = 8;
+gridStep = 10;
 
 parfor i = 1:length(ind)
-    I = imread(num2str(cell2mat(list(ind(i)))));
+    str = num2str(cell2mat(imgSet(ind(i))));
+    imgPath = ['data/images/' str '.jpg'];
+    I = imread(imgPath);
       
     % Get image dimensions
     [height, width, channels] = size(I);
