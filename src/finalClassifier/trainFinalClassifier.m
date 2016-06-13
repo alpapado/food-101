@@ -10,6 +10,7 @@ components = params.models;
 data = load('data');
 encodeImageSet('train', components, params, data);
 encodeImageSet('test', components, params, data);
+clear data
 
 load('train.mat');
 fprintf('Loaded training set\n');
@@ -29,9 +30,11 @@ function encodeImageSet(type, components, params, data)
 if strcmp(type,'train')
 %   fid = fopen('data/meta/train.txt');
   start = 1;
+  nImages = 75750;
 elseif strcmp(type,'test');
 %   fid = fopen('data/meta/test.txt');
-  start = 75001;
+  start = 75750+1;
+  nImages = 25250;
 end
 
 % images = textscan(fid, '%s', 'Delimiter', '\n');
@@ -47,7 +50,7 @@ imgSet = allSet;
 
 pyramidLevels = params.pyramidLevels;
 classes = params.classes;
-nImages = length(imgSet);
+%nImages = length(imgSet);
 [nClasses, nComponents] = size(components);
 numCells = sum(4 .^ (0:pyramidLevels-1)); % Num of cells in pyramid grid
 d = nClasses * nComponents * numCells; % Dimensionality of feature vec
