@@ -1,24 +1,22 @@
 % Full pipeline of the Random Forest Discriminative Components Algorithm
 % with reference to the sections of the original paper "Food-101: Mining
 % Discriminative components with Random Forests"
-
+vl_threads(8);
 %% Set params %%
 params = setParams();
 
 %% Segment and encode dataset %%
-%if ~exist('data.mat', 'file')
-%   segmentDataset(params);
-%end
-%
+if ~exist('data.mat', 'file')
+   segmentDataset(params);
+end
+
 %% Grow forest (Section 4.1) %%
-params.nTrees = 10;
 if ~exist('trees.mat', 'file')
    trees = randomForest(params);
 else
    load('trees.mat');
 end
 
-%trees = trees(1:5);
 params.nTrees = length(trees);
 disp(params);
 if ~exist('vset', 'var')
